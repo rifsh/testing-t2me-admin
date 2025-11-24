@@ -1,0 +1,24 @@
+{
+    "validUser": {
+        "email": "shamil707@gmail.com",
+        "password": "admin@321",
+        "country": {
+            "id": 3,
+            "name": "UAE",
+            "schema_name": "uae_schema"
+        }
+    },
+    "countries": [
+        {
+            "id": 3,
+            "name": "UAE",
+            "schema_name": "uae_schema"
+        },
+        {
+            "id": 2,
+            "name": "India",
+            "schema_name": "india_schema"
+        }
+    ],
+    "errorMessage": "Invalid credentials"
+}

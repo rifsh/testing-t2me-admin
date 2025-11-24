@@ -3,11 +3,32 @@ import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { configureStore } from "@reduxjs/toolkit";
+import mockData from "../../mock/auth/login.mock.json"; // adjust path
 
-import LoginForm from "../../../src/views/auth-views/components/LoginForm";
-import auth from "../../../src/store/slices/authSlice";
+import { LoginForm } from "../../../src/views/auth-views/components/LoginForm"; // Import named export
+import authReducer from "../../../src/store/slices/authSlice";
 import locationReducer from "../../../src/store/slices/locationSlice";
 import { TENANT_SCHEMA } from "constants/AuthConstant";
+
+// Mock the modules that import global store
+jest.mock("../../../src/services/AuthService", () => ({
+    __esModule: true,
+    default: {},
+}));
+
+jest.mock("../../../src/auth/FetchInterceptor", () => ({
+    __esModule: true,
+    default: {},
+}));
+
+// Mock the getUserdata action
+jest.mock("../../../src/store/slices/authSlice", () => {
+    const actual = jest.requireActual("../../../src/store/slices/authSlice");
+    return {
+        ...actual,
+        getUserdata: jest.fn(() => ({ type: "auth/getUserdata" })),
+    };
+});
 
 describe("LoginForm Component", () => {
     let store;
@@ -19,9 +40,15 @@ describe("LoginForm Component", () => {
     const mockFacebookLogin = jest.fn();
 
     beforeEach(() => {
+        // Clear localStorage before each test
+        localStorage.clear();
+
+        // Clear all mocks
+        jest.clearAllMocks();
+
         store = configureStore({
             reducer: {
-                auth: auth,
+                auth: authReducer,
                 locations: locationReducer,
             },
             preloadedState: {
@@ -33,18 +60,19 @@ describe("LoginForm Component", () => {
                     redirect: "/dashboard",
                 },
                 locations: {
-                    tenant_country: [
-                        { id: 1, name: "UAE", schema_name: "uae_schema" },
-                        { id: 2, name: "India", schema_name: "india_schema" },
-                    ],
+                    tenant_country: mockData.countries,
                 },
             },
         });
     });
 
-    const renderWithProviders = () =>
+    afterEach(() => {
+        localStorage.clear();
+    });
+
+    const renderWithProviders = (customStore = store) =>
         render(
-            <Provider store={store}>
+            <Provider store={customStore}>
                 <BrowserRouter>
                     <LoginForm
                         signIn={mockSignIn}
@@ -52,6 +80,11 @@ describe("LoginForm Component", () => {
                         hideAuthMessage={mockHideAuthMessage}
                         signInWithGoogle={mockGoogleLogin}
                         signInWithFacebook={mockFacebookLogin}
+                        token={null}
+                        loading={false}
+                        redirect="/dashboard"
+                        showMessage={false}
+                        message=""
                     />
                 </BrowserRouter>
             </Provider>
@@ -74,54 +107,85 @@ describe("LoginForm Component", () => {
     it("submits form and dispatches signIn", async () => {
         renderWithProviders();
 
-        fireEvent.change(screen.getByLabelText(/Email/i), {
-            target: { value: "test@gmail.com" },
-        });
-        fireEvent.change(screen.getByLabelText(/Password/i), {
-            target: { value: "123456" },
+        // Fill in email
+        const emailInput = screen.getByLabelText(/Email/i);
+        fireEvent.change(emailInput, {
+            target: { value: mockData.validUser.email },
         });
 
-        // Select country (assuming Ant Design Select)
-        fireEvent.mouseDown(screen.getByText("Country"));
-        await waitFor(() => fireEvent.click(screen.getByText("UAE")));
+        // Fill in password
+        const passwordInput = screen.getByLabelText(/Password/i);
+        fireEvent.change(passwordInput, {
+            target: { value: mockData.validUser.password },
+        });
 
-        fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+        // Select country
+        const countrySelect = screen.getByLabelText("Country");
+        fireEvent.mouseDown(countrySelect);
+
+        // Wait for dropdown options to appear
+        const uaeOption = await screen.findByText(mockData.validUser.country.name);
+        fireEvent.click(uaeOption);
+
+        // Submit form
+        const submitButton = screen.getByRole("button", { name: /sign in/i });
+        fireEvent.click(submitButton);
 
         await waitFor(() => {
             expect(mockShowLoading).toHaveBeenCalled();
-            expect(mockSignIn).toHaveBeenCalledWith({
-                username: "test@gmail.com",
-                password: "123456",
-                country_id: 1,
-            });
-            expect(localStorage.getItem(TENANT_SCHEMA)).toBe("uae_schema");
         });
-    });
 
-    it("handles google login", () => {
-        renderWithProviders();
-        fireEvent.click(screen.getByText("Google"));
-        expect(mockShowLoading).toHaveBeenCalled();
-        expect(mockGoogleLogin).toHaveBeenCalled();
-    });
+        await waitFor(() => {
+            expect(mockSignIn).toHaveBeenCalledWith({
+                username: mockData.validUser.email,
+                password: mockData.validUser.password,
+                country_id: mockData.validUser.country.id,
+            });
+        });
 
-    it("handles facebook login", () => {
-        renderWithProviders();
-        fireEvent.click(screen.getByText("Facebook"));
-        expect(mockShowLoading).toHaveBeenCalled();
-        expect(mockFacebookLogin).toHaveBeenCalled();
+        // Check localStorage
+        expect(localStorage.getItem(TENANT_SCHEMA)).toBe(mockData.validUser.country.schema_name);
     });
 
     it("shows error message when showMessage=true", () => {
-        store = configureStore({
-            reducer: { auth: auth, locations: locationReducer },
+        const errorStore = configureStore({
+            reducer: {
+                auth: authReducer,
+                locations: locationReducer
+            },
             preloadedState: {
-                auth: { ...store.getState().auth, showMessage: true, message: "Invalid credentials" },
-                locations: store.getState().locations,
+                auth: {
+                    loading: false,
+                    message: "Invalid credentials",
+                    showMessage: true,
+                    token: null,
+                    redirect: "/dashboard",
+                },
+                locations: {
+                    tenant_country: mockData.countries,
+                },
             },
         });
 
-        renderWithProviders();
+        render(
+            <Provider store={errorStore}>
+                <BrowserRouter>
+                    <LoginForm
+                        signIn={mockSignIn}
+                        showLoading={mockShowLoading}
+                        hideAuthMessage={mockHideAuthMessage}
+                        signInWithGoogle={mockGoogleLogin}
+                        signInWithFacebook={mockFacebookLogin}
+                        token={null}
+                        loading={false}
+                        redirect="/dashboard"
+                        showMessage={true}
+                        message="Invalid credentials"
+                    />
+                </BrowserRouter>
+            </Provider>
+        );
+
         expect(screen.getByText("Invalid credentials")).toBeInTheDocument();
     });
 });

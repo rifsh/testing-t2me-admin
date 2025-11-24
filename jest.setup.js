@@ -1,120 +1,114 @@
 import '@testing-library/jest-dom';
 
-// Store original console methods
+// ============================================================================
+// DEBUG MODE
+// ============================================================================
+const DEBUG_MODE = process.env.DEBUG_TESTS === 'true';
+
+// ============================================================================
+// ORIGINAL CONSOLE METHODS
+// ============================================================================
 const originalError = console.error;
 const originalWarn = console.warn;
+const originalLog = console.log;
 
-// Suppress specific React and testing warnings
+const suppressedMessages = { errors: [], warnings: [] };
+const SUPPRESSED_ERROR_PATTERNS = [
+    'ReactDOMTestUtils.act',
+    'act(...)',
+    'was not wrapped in act',
+    'React Router',
+    'Not implemented: HTMLFormElement.prototype.submit',
+];
+const SUPPRESSED_WARN_PATTERNS = ['componentWillReceiveProps', 'componentWillMount'];
+
+// ============================================================================
+// CONSOLE OVERRIDES
+// ============================================================================
 console.error = (...args) => {
-    // Suppress React DOM test utils act() warnings
-    if (
-        typeof args[0] === 'string' &&
-        (args[0].includes('ReactDOMTestUtils.act') ||
-            args[0].includes('act(...)') ||
-            args[0].includes('was not wrapped in act'))
-    ) {
+    const message = typeof args[0] === 'string' ? args[0] : '';
+    const shouldSuppress = SUPPRESSED_ERROR_PATTERNS.some(pattern => message.includes(pattern));
+    if (shouldSuppress && !DEBUG_MODE) {
+        suppressedMessages.errors.push(message);
         return;
     }
-
-    // Suppress React Router warnings in tests
-    if (
-        typeof args[0] === 'string' &&
-        args[0].includes('React Router')
-    ) {
-        return;
-    }
-
-    // Suppress warning about using browser-only APIs
-    if (
-        typeof args[0] === 'string' &&
-        args[0].includes('Not implemented: HTMLFormElement.prototype.submit')
-    ) {
-        return;
-    }
-
-    originalError.call(console, ...args);
+    // Show full error
+    originalError.apply(console, args);
 };
 
 console.warn = (...args) => {
-    // Suppress specific warnings if needed
-    if (
-        typeof args[0] === 'string' &&
-        (args[0].includes('componentWillReceiveProps') ||
-            args[0].includes('componentWillMount'))
-    ) {
+    const message = typeof args[0] === 'string' ? args[0] : '';
+    const shouldSuppress = SUPPRESSED_WARN_PATTERNS.some(pattern => message.includes(pattern));
+    if (shouldSuppress && !DEBUG_MODE) {
+        suppressedMessages.warnings.push(message);
         return;
     }
-
-    originalWarn.call(console, ...args);
+    originalWarn.apply(console, args);
 };
 
-// Mock window.matchMedia
+global.testLog = (...args) => {
+    if (DEBUG_MODE) originalLog.call(console, '🧪 TEST LOG:', ...args);
+};
+
+if (DEBUG_MODE) {
+    afterAll(() => {
+        if (suppressedMessages.errors.length || suppressedMessages.warnings.length) {
+            console.log('\n📊 SUPPRESSED MESSAGES SUMMARY:');
+            console.log(`  Errors suppressed: ${suppressedMessages.errors.length}`);
+            console.log(`  Warnings suppressed: ${suppressedMessages.warnings.length}`);
+        }
+    });
+}
+
+// ============================================================================
+// MOCK BROWSER APIS
+// ============================================================================
 Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation((query) => ({
+    value: jest.fn().mockImplementation(query => ({
         matches: false,
         media: query,
         onchange: null,
-        addListener: jest.fn(), // deprecated
-        removeListener: jest.fn(), // deprecated
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
         dispatchEvent: jest.fn(),
     })),
 });
 
-// Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+global.IntersectionObserver = class {
     constructor() { }
     disconnect() { }
     observe() { }
-    takeRecords() {
-        return [];
-    }
+    takeRecords() { return []; }
     unobserve() { }
 };
 
-// Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
+global.ResizeObserver = class {
     constructor() { }
     disconnect() { }
     observe() { }
     unobserve() { }
 };
 
-// Mock window.scrollTo
-Object.defineProperty(window, 'scrollTo', {
-    writable: true,
-    value: jest.fn(),
-});
+Object.defineProperty(window, 'scrollTo', { writable: true, value: jest.fn() });
 
-// Mock localStorage
-const localStorageMock = {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-    clear: jest.fn(),
-    length: 0,
-    key: jest.fn(),
-};
+// ============================================================================
+// MOCK STORAGE
+// ============================================================================
+const localStorageMock = { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn(), clear: jest.fn(), length: 0, key: jest.fn() };
+const sessionStorageMock = { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn(), clear: jest.fn(), length: 0, key: jest.fn() };
 global.localStorage = localStorageMock;
-
-// Mock sessionStorage
-const sessionStorageMock = {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-    clear: jest.fn(),
-    length: 0,
-    key: jest.fn(),
-};
 global.sessionStorage = sessionStorageMock;
 
-// Mock window.location
+// ============================================================================
+// MOCK LOCATION
+// ============================================================================
 delete window.location;
 window.location = {
-    href: 'http://localhost',
-    origin: 'http://localhost',
+    href: '[http://localhost](http://localhost)',
+    origin: '[http://localhost](http://localhost)',
     protocol: 'http:',
     host: 'localhost',
     hostname: 'localhost',
@@ -127,7 +121,9 @@ window.location = {
     assign: jest.fn(),
 };
 
-// Mock getComputedStyle
+// ============================================================================
+// MOCK STYLING
+// ============================================================================
 window.getComputedStyle = jest.fn().mockImplementation(() => ({
     getPropertyValue: jest.fn(),
     display: 'block',
@@ -135,176 +131,87 @@ window.getComputedStyle = jest.fn().mockImplementation(() => ({
     opacity: '1',
 }));
 
-// Mock URL.createObjectURL
+// ============================================================================
+// MOCK FILES / MEDIA
+// ============================================================================
 global.URL.createObjectURL = jest.fn(() => 'mock-object-url');
 global.URL.revokeObjectURL = jest.fn();
-
-// Mock fetch API
 global.fetch = jest.fn();
+global.Image = class { constructor() { setTimeout(() => { this.onload && this.onload(); }, 100); } };
 
-// Mock Image
-global.Image = class {
-    constructor() {
-        setTimeout(() => {
-            this.onload && this.onload();
-        }, 100);
-    }
-};
+// ============================================================================
+// MOCK ANIMATION
+// ============================================================================
+global.requestAnimationFrame = cb => setTimeout(cb, 0);
+global.cancelAnimationFrame = id => clearTimeout(id);
 
-// Mock requestAnimationFrame
-global.requestAnimationFrame = (cb) => setTimeout(cb, 0);
-global.cancelAnimationFrame = (id) => clearTimeout(id);
+// ============================================================================
+// ANT DESIGN MOCKS
+// ============================================================================
+jest.mock('antd/lib/message', () => ({ success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn(), warn: jest.fn(), loading: jest.fn() }));
+jest.mock('antd/lib/notification', () => ({ success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn(), warn: jest.fn(), open: jest.fn() }));
 
-// Mock Ant Design components that might cause issues
-jest.mock('antd/lib/message', () => ({
-    success: jest.fn(),
-    error: jest.fn(),
-    info: jest.fn(),
-    warning: jest.fn(),
-    warn: jest.fn(),
-    loading: jest.fn(),
-}));
-
-jest.mock('antd/lib/notification', () => ({
-    success: jest.fn(),
-    error: jest.fn(),
-    info: jest.fn(),
-    warning: jest.fn(),
-    warn: jest.fn(),
-    open: jest.fn(),
-}));
-
-// Mock process.env if needed
-process.env = {
-    ...process.env,
-    NODE_ENV: 'test',
-    REACT_APP_API_URL: 'http://localhost:3000/api',
-};
-
-// Increase timeout for async operations
+// ============================================================================
+// ENVIRONMENT
+// ============================================================================
+process.env = { ...process.env, NODE_ENV: 'test', REACT_APP_API_URL: '[http://localhost:3000/api](http://localhost:3000/api)' };
 jest.setTimeout(10000);
 
-// Clean up after each test
+// ============================================================================
+// CLEANUP
+// ============================================================================
 afterEach(() => {
     jest.clearAllMocks();
+    jest.resetModules();
     localStorage.clear();
     sessionStorage.clear();
 });
 
-// Global test utilities
+// ============================================================================
+// TEST UTILITIES
+// ============================================================================
 global.testUtils = {
-    // Wait for async updates
-    waitFor: (callback, timeout = 3000) => {
-        return new Promise((resolve, reject) => {
-            const startTime = Date.now();
-            const interval = setInterval(() => {
-                try {
-                    callback();
-                    clearInterval(interval);
-                    resolve();
-                } catch (error) {
-                    if (Date.now() - startTime > timeout) {
-                        clearInterval(interval);
-                        reject(error);
-                    }
-                }
-            }, 50);
-        });
-    },
+    waitFor: (callback, timeout = 3000) => new Promise((resolve, reject) => {
+        const start = Date.now();
+        const interval = setInterval(() => {
+            try { callback(); clearInterval(interval); resolve(); }
+            catch (e) { if (Date.now() - start > timeout) { clearInterval(interval); reject(e); } }
+        }, 50);
+    }),
 };
 
-// Suppress specific prop-types warnings
-const error = console.error;
-console.error = (...args) => {
-    if (
-        typeof args[0] === 'string' &&
-        (args[0].includes('Warning: Failed prop type') ||
-            args[0].includes('Warning: React does not recognize'))
-    ) {
-        return;
-    }
-    error(...args);
-};
-
-// Add custom matchers if needed
+// ============================================================================
+// CUSTOM MATCHERS
+// ============================================================================
 expect.extend({
     toBeWithinRange(received, floor, ceiling) {
         const pass = received >= floor && received <= ceiling;
-        if (pass) {
-            return {
-                message: () =>
-                    `expected ${received} not to be within range ${floor} - ${ceiling}`,
-                pass: true,
-            };
-        } else {
-            return {
-                message: () =>
-                    `expected ${received} to be within range ${floor} - ${ceiling}`,
-                pass: false,
-            };
-        }
+        return { pass, message: () => pass ? `expected ${received} not to be within range ${floor} - ${ceiling}` : `expected ${received} to be within range ${floor} - ${ceiling}` };
     },
 });
 
-// Mock crypto.getRandomValues for components that use it
+// ============================================================================
+// MOCK CRYPTO
+// ============================================================================
 Object.defineProperty(global, 'crypto', {
     value: {
-        getRandomValues: (arr) => {
-            for (let i = 0; i < arr.length; i++) {
-                arr[i] = Math.floor(Math.random() * 256);
-            }
-            return arr;
-        },
-        randomUUID: () => {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
-                /[xy]/g,
-                function (c) {
-                    const r = (Math.random() * 16) | 0;
-                    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-                    return v.toString(16);
-                }
-            );
-        },
+        getRandomValues: arr => arr.map((_, i) => Math.floor(Math.random() * 256)),
+        randomUUID: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = (Math.random() * 16) | 0; const v = c === 'x' ? r : (r & 0x3) | 0x8; return v.toString(16); }),
     },
 });
 
-// Mock canvas for chart libraries
+// ============================================================================
+// MOCK CANVAS (for chart libs)
+// ============================================================================
 HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
-    fillRect: jest.fn(),
-    clearRect: jest.fn(),
-    getImageData: jest.fn(),
-    putImageData: jest.fn(),
-    createImageData: jest.fn(),
-    setTransform: jest.fn(),
-    drawImage: jest.fn(),
-    save: jest.fn(),
-    fillText: jest.fn(),
-    restore: jest.fn(),
-    beginPath: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    closePath: jest.fn(),
-    stroke: jest.fn(),
-    translate: jest.fn(),
-    scale: jest.fn(),
-    rotate: jest.fn(),
-    arc: jest.fn(),
-    fill: jest.fn(),
-    measureText: jest.fn(() => ({ width: 0 })),
-    transform: jest.fn(),
-    rect: jest.fn(),
-    clip: jest.fn(),
+    fillRect: jest.fn(), clearRect: jest.fn(), getImageData: jest.fn(),
+    putImageData: jest.fn(), createImageData: jest.fn(), setTransform: jest.fn(),
+    drawImage: jest.fn(), save: jest.fn(), fillText: jest.fn(), restore: jest.fn(),
+    beginPath: jest.fn(), moveTo: jest.fn(), lineTo: jest.fn(), closePath: jest.fn(),
+    stroke: jest.fn(), translate: jest.fn(), scale: jest.fn(), rotate: jest.fn(),
+    arc: jest.fn(), fill: jest.fn(), measureText: jest.fn(() => ({ width: 0 })), transform: jest.fn(), rect: jest.fn(), clip: jest.fn()
 }));
-
 HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,mock');
-HTMLCanvasElement.prototype.toBlob = jest.fn((callback) => {
-    callback(new Blob(['mock'], { type: 'image/png' }));
-});
+HTMLCanvasElement.prototype.toBlob = jest.fn(callback => callback(new Blob(['mock'], { type: 'image/png' })));
 
-// Reset modules after each test to ensure clean state
-afterEach(() => {
-    jest.resetModules();
-});
-
-// Export for use in tests if needed
-export { originalError, originalWarn };
+export { originalError, originalWarn, originalLog };

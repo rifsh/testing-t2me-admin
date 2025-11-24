@@ -25,27 +25,43 @@ import {
 import GenericDropdown from "views/theater/components/GenericDropdown";
 import { TENANT_SCHEMA } from "constants/AuthConstant";
 
-export const LoginForm = (props) => {
+export const LoginForm = ({
+  otherSignIn = true,
+  showForgetPassword = false,
+  hideAuthMessage,
+  onForgetPasswordClick,
+  showLoading,
+  signInWithGoogle,
+  signInWithFacebook,
+  extra,
+  signIn,
+  token,
+  loading,
+  redirect,
+  showMessage,
+  message,
+  allowRedirect = true,
+}) => {
   const navigate = useNavigate();
 
   const { tenant_country } = useSelector((state) => state.locations);
-  const {
-    otherSignIn,
-    showForgetPassword,
-    hideAuthMessage,
-    onForgetPasswordClick,
-    showLoading,
-    signInWithGoogle,
-    signInWithFacebook,
-    extra,
-    signIn,
-    token,
-    loading,
-    redirect,
-    showMessage,
-    message,
-    allowRedirect = true,
-  } = props;
+  // const {
+  //   otherSignIn,
+  //   showForgetPassword,
+  //   hideAuthMessage,
+  //   onForgetPasswordClick,
+  //   showLoading,
+  //   signInWithGoogle,
+  //   signInWithFacebook,
+  //   extra,
+  //   signIn,
+  //   token,
+  //   loading,
+  //   redirect,
+  //   showMessage,
+  //   message,
+  //   allowRedirect = true,
+  // } = props;
 
   // const initialCredential = {
   // 	username: 'shamil707@gmail.com',
@@ -86,10 +102,6 @@ export const LoginForm = (props) => {
     }
   });
 
-  useEffect(() => {
-    console.warn(tenant_country);
-  }, [tenant_country]);
-
   const renderOtherSignIn = (
     <div>
       <Divider>
@@ -99,6 +111,7 @@ export const LoginForm = (props) => {
       </Divider>
       <div className="d-flex justify-content-center">
         <Button
+          name="google"
           onClick={() => onGoogleLogin()}
           className="mr-2"
           disabled={loading}
@@ -157,11 +170,10 @@ export const LoginForm = (props) => {
           name="password"
           label={
             <div
-              className={`${
-                showForgetPassword
-                  ? "d-flex justify-content-between w-100 align-items-center"
-                  : ""
-              }`}
+              className={`${showForgetPassword
+                ? "d-flex justify-content-between w-100 align-items-center"
+                : ""
+                }`}
             >
               <span>Password</span>
               {showForgetPassword && (
@@ -224,10 +236,10 @@ LoginForm.propTypes = {
   extra: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
 };
 
-LoginForm.defaultProps = {
-  otherSignIn: true,
-  showForgetPassword: false,
-};
+// LoginForm.defaultProps = {
+//   otherSignIn: true,
+//   showForgetPassword: false,
+// };
 
 const mapStateToProps = ({ auth }) => {
   const { loading, message, showMessage, token, redirect } = auth;

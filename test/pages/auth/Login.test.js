@@ -10,12 +10,26 @@ jest.mock("../../../src/views/auth-views/components/LoginForm", () => () => (
     <div data-testid="login-form">Mock Login Form</div>
 ));
 
+jest.mock("../../../src/auth/FetchInterceptor.js", () => ({
+    __esModule: true,
+    default: {},
+}));
+
+jest.mock("../../../src/services/ScheduleService.js", () => ({
+    __esModule: true,
+    default: {},
+}));
+
+
 // Mock Utils.clearAllBrowserData
 jest.spyOn(Utils, "clearAllBrowserData").mockImplementation(jest.fn());
 
 const mockStore = configureStore([]);
 
-const renderWithStore = (initialState = { theme: { currentTheme: "light" } }) => {
+const renderWithStore = (initialState = {
+    theme: { currentTheme: "light" },
+    schedules: { data: [], loading: false }, // 👈 add schedules slice
+}) => {
     const store = mockStore(initialState);
     return render(
         <Provider store={store}>
@@ -40,21 +54,21 @@ describe("Login Component", () => {
     });
 
     test("should display light theme logo when theme = 'light'", () => {
-        renderWithStore({ theme: { currentTheme: "light" } });
+        renderWithStore({ theme: { currentTheme: "light" }, schedules: { data: [], loading: false } });
 
         const logo = screen.getByRole("img");
         expect(logo).toHaveAttribute("src", "/img/logo.png");
     });
 
     test("should display dark theme logo when theme = 'dark'", () => {
-        renderWithStore({ theme: { currentTheme: "dark" } });
+        renderWithStore({ theme: { currentTheme: "dark" }, schedules: { data: [], loading: false } });
 
         const logo = screen.getByRole("img");
         expect(logo).toHaveAttribute("src", "/img/logo-white.png");
     });
 
     test("renders component UI layout without crashing", () => {
-        renderWithStore();
+        renderWithStore({ theme: { currentTheme: "light" }, schedules: { data: [], loading: false } });
 
         // Check card content container
         expect(screen.getByRole("img")).toBeInTheDocument();
