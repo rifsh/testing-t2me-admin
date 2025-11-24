@@ -2,6 +2,7 @@ import React from 'react'
 import { Card, Row, Col, Image, Carousel, Badge, Typography, Collapse, Tag } from "antd";
 import { UserAddOutlined, CalendarOutlined, EnvironmentOutlined, TagOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { CDN_PATH } from 'configs/AppConfig';
+import CDNImage from 'components/layout-components/Image/CDNImage';
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
@@ -158,10 +159,16 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                             }}
                         >
                             <div style={{ borderRadius: "8px", overflow: "hidden" }}>
-                                <Image
+                                {/* <Image
                                     alt={`media image`}
                                     src={`${CDN_PATH}/${eventDetails.thumbnail_image}`}
                                     height={250}
+                                    style={{ width: "100%", objectFit: "cover" }}
+                                /> */}
+                                <CDNImage
+                                    src={eventDetails.thumbnail_image}
+                                    alt={eventDetails?.name || `media image`}
+                                    height={200}
                                     style={{ width: "100%", objectFit: "cover" }}
                                 />
                             </div>

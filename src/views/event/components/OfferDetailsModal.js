@@ -1,7 +1,10 @@
 import React from "react";
-import { Modal } from "antd";
+import { Collapse, Modal, Typography } from "antd";
 import CDNImage from "components/layout-components/Image/CDNImage";
 import { discounts } from "constants/AppConstants";
+
+const { Panel } = Collapse;
+const { Paragraph } = Typography;
 
 const OfferDetailsModal = ({ open, onClose, offer, type }) => {
     if (!offer) return null;
@@ -172,19 +175,38 @@ const OfferDetailsModal = ({ open, onClose, offer, type }) => {
 
                 {/* Keywords */}
                 {offer.key_words?.length > 0 && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold mb-3">Keywords</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {offer.key_words.map((word, i) => (
-                                <span
-                                    key={i}
-                                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                                >
-                                    {word}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
+                    <Collapse
+                        bordered={false}
+                        defaultActiveKey={['0']}
+                        className="bg-gray-50 rounded-lg"
+                    >
+                        <Panel
+                            header={
+                                <h3 className="text-lg font-semibold text-gray-900 m-0">
+                                    Keywords ({offer.key_words.length})
+                                </h3>
+                            }
+                            key="1"
+                        >
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                {offer.key_words.map((keyword, index) => (
+                                    <span
+                                        key={index}
+                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                                    >
+                                        {keyword}
+                                        <Paragraph
+                                            copyable={{
+                                                text: keyword,
+                                                tooltips: ['Copy keyword', 'Copied!']
+                                            }}
+                                            className="ml-2 mb-0"
+                                        />
+                                    </span>
+                                ))}
+                            </div>
+                        </Panel>
+                    </Collapse>
                 )}
 
                 {/* Weekdays */}

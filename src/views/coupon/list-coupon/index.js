@@ -8,6 +8,8 @@ import {
   Modal,
   Descriptions,
   Dropdown,
+  Typography,
+  Collapse,
 } from "antd";
 import {
   EyeOutlined,
@@ -42,7 +44,8 @@ import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
 import CDNImage from "components/layout-components/Image/CDNImage";
 
-const { Option } = Select;
+const { Paragraph } = Typography;
+const { Panel } = Collapse;
 
 const CouponList = () => {
   const navigate = useNavigate();
@@ -386,22 +389,39 @@ const CouponList = () => {
                 </div>
               </div>
             </div>
-
-            {/* Keywords Section */}
             {selectedCoupon.key_words?.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Keywords</h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCoupon.key_words.map((keyword, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <Collapse
+                bordered={false}
+                defaultActiveKey={['0']} // Set to empty array [] if you want it collapsed by default
+                className="bg-gray-50 rounded-lg"
+              >
+                <Panel
+                  header={
+                    <h3 className="text-lg font-semibold text-gray-900 m-0">
+                      Keywords ({selectedCoupon.key_words.length})
+                    </h3>
+                  }
+                  key="1"
+                >
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {selectedCoupon.key_words.map((keyword, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                      >
+                        {keyword}
+                        <Paragraph
+                          copyable={{
+                            text: keyword,
+                            tooltips: ['Copy keyword', 'Copied!']
+                          }}
+                          className="ml-2 mb-0"
+                        />
+                      </span>
+                    ))}
+                  </div>
+                </Panel>
+              </Collapse>
             )}
 
             {/* Weekday Associations */}

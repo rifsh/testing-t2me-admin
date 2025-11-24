@@ -129,7 +129,7 @@ const CouponGenerator = ({ form }) => {
                     </p>
                 </div>
 
-                <div className="flex items-end mt-2">
+                <div className="flex items-end mt-0">
                     <Button
                         type="primary"
                         className="w-full"
@@ -145,7 +145,7 @@ const CouponGenerator = ({ form }) => {
             {/* Coupon List */}
             {coupons.length > 0 ? (
                 <>
-                    <div className="flex justify-between items-center mb-3">
+                    <div className="flex justify-between items-center mt-2 mb-3">
                         <h3 className="text-lg font-medium text-gray-800">
                             Generated Coupons ({coupons.length})
                         </h3>
@@ -179,7 +179,7 @@ const CouponGenerator = ({ form }) => {
                     }
                 </>
             ) : (
-                <div className="text-center py-10 border-2 border-dashed border-gray-300 rounded-lg">
+                <div className="text-center mt-3 py-10 border-2 border-dashed border-gray-300 rounded-lg">
                     <p className="text-gray-500">No coupon codes generated yet.</p>
                 </div>
             )

@@ -14,7 +14,7 @@ const ApplicableDays = ({
     const [selectedDays, setSelectedDays] = useState([]);
 
     useEffect(() => {
-        if (selectedCouponsDays && mode === EDIT.toUpperCase()) {
+        if (selectedCouponsDays && mode?.toLowerCase() === EDIT?.toLowerCase()) {
             const formDays = selectedCouponsDays?.map((days) => days.weekday?.toUpperCase()) || [];
             console.log("Form days changed:", selectedCouponsDays?.map((days) => days.weekday?.toUpperCase()));
             setSelectedDays(formDays);
