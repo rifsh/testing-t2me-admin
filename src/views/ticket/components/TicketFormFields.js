@@ -54,8 +54,9 @@ import {
 import { isOrganizer } from "configs/UserAccessConfig"; // ✅ Add this
 import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil"; // ✅ Add this
 import { ActionType } from "utils/api/warning-submit-util";
+import EventAndTheaterChooser from "components/util-components/FormItems/EventAndTheaterChooser";
 
-const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
+const TicketFormFields = ({ mode, ticketId, isMakeChange,type }) => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -352,6 +353,7 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
       const isDynamic = values.ticket_type === "dynamic";
 
       const ticketData = {
+        event_ids:values.event_ids,
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
         base_price: values.type_price,
@@ -495,6 +497,7 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
         key={`ticket-form-${JSON.stringify(allFormData)}`}
       >
         <Card title="Ticket Form">
+          <EventAndTheaterChooser type={type}form={form}/>
           <PlaceWithCountryForm
             form={form}
             label={"Place"}

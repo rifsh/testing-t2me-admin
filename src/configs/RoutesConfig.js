@@ -956,7 +956,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "track.event.seat": {
     key: "trackRequest.seat.status",
-    path: `${APP_PREFIX_PATH}/track/event-seats/status/list`,
+    path: `${APP_PREFIX_PATH}/track/event-seats/status/list/:type`,
     component: React.lazy(() =>
       import("views/track-team/seat-organizer/status-list")
     ),
@@ -1059,6 +1059,16 @@ const ALL_PROTECTED_ROUTES = {
     path: `${APP_PREFIX_PATH}/track/ticket/status/details/:ticketId/:type`,
     component: React.lazy(() =>
       import("views/track-team/ticket-organizer/status-details")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
+  },
+  "track.event.seat.details": {
+    key: "trackRequest.seat.status.details",
+    path: `${APP_PREFIX_PATH}/track/seat/status/details/:seatId/:type`,
+    component: React.lazy(() =>
+      import("views/track-team/seat-organizer/status-details")
     ),
     category: "issues",
     subcategory: "track_requests",

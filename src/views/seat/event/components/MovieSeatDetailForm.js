@@ -14,6 +14,8 @@ import { resetTicketSelection } from "store/slices/ticketSlice";
 import { useDispatch } from "react-redux";
 import { setSelectedScreenData } from "store/slices/screenSlice";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
+import EventAndTheaterChooser from "components/util-components/FormItems/EventAndTheaterChooser";
+import { EventType } from "constants/AppConstants";
 
 const { Option } = Select;
 
@@ -60,16 +62,25 @@ function MovieSeatDetailForm({ form, mode }) {
       <Col xs={24} sm={24} md={17}>
         <Card title="Seat Details">
           <Row gutter={16}>
+            {/* LEFT COLUMN */}
             <Col xs={24} sm={12}>
+              {/* EVENT (optional) */}
+
+              <EventAndTheaterChooser type={EventType.EVENT} form={form} />
+
+              {/* PLACE */}
               <PlaceWithCountryForm
                 form={form}
-                rules={[{ required: true }]}
                 label="Place"
+                rules={[{ required: true }]}
                 onSelect={handlePlaceSelect}
                 disabled={mode === "EDIT"}
               />
             </Col>
+
+            {/* RIGHT COLUMN */}
             <Col xs={24} sm={12}>
+              {/* VENUE */}
               <VenueListForm
                 form={form}
                 disabled={mode === "EDIT"}
@@ -78,10 +89,8 @@ function MovieSeatDetailForm({ form, mode }) {
                 rules={[{ required: true }]}
                 onSelect={handleVenueSelect}
               />
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
+
+              {/* SEAT STRUCTURE NAME */}
               <Form.Item
                 name="name"
                 label="Seat Structure Name"

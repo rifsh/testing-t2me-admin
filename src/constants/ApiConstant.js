@@ -81,6 +81,8 @@ export const ApiConstant = {
     "/api/v1/event/tickets/secured/ticketstructure/organizer/approval",
   ORGANIZER_OFFER_DETAIL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/detail",
+  ORGANIZER_SEAT_DETAIL_URL:
+    "/api/v1/event/seats/secured/seatstructure/organizer/details",
   ORGANIZER_SCHEDULE_DETAIL_URL:
     "/api/v1/event/schedule/secured/schedules/organizer/detail",
   ORGANIZER_EVENT_DETAIL_URL:

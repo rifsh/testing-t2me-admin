@@ -138,6 +138,13 @@ EventOrganizerService.fetchOrganizerSingleOfferUpdate = function (params) {
     params: Utils.filterParams(params),
   });
 };
+EventOrganizerService.fetchOrganizerSingleSeatUpdate = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_SEAT_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 EventOrganizerService.fetchOrganizerSingleScheduleUpdate = function (params) {
   return fetch({
     url: ApiConstant.ORGANIZER_SCHEDULE_DETAIL_URL,
@@ -202,6 +209,19 @@ EventOrganizerService.fetchOrganizerSingleCouponUpdate = function (params) {
     url: ApiConstant.ORGANIZER_COUPON_DETAILS_URL,
     method: "get",
     params: Utils.filterParams(params),
+  });
+};
+
+EventOrganizerService.makeChangeOffer = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: ApiConstant.ORGANIZER_OFFER_MAKE_CHANGES_URL,
+    method: "put",
+    data: data,
+    params: Utils.filterParams({
+      ...pageData,
+      action: handleAction(encodedAction),
+    }),
   });
 };
 export default EventOrganizerService;

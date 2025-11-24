@@ -44,6 +44,7 @@ import { isOrganizer } from "configs/UserAccessConfig";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
+import EventAndTheaterChooser from "components/util-components/FormItems/EventAndTheaterChooser";
 
 const { Text } = Typography;
 
@@ -230,59 +231,7 @@ function OfferFormFields({ type }) {
       {/* Left Column - Main Form */}
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details" bordered={false}>
-          {isOrganizer() && type === EventType.MOVIE ? (
-            <>
-              <TheaterListForm
-                rules={[{ required: true }]}
-                form={form}
-                mode="multiple"
-                name="theatre_ids"
-                apiParams={{
-                  organizer: true,
-                }}
-              />
-              <Divider style={{ margin: "16px 0" }} />
-            </>
-          ) : isOrganizer() && type === EventType.EVENT ? (
-            <>
-              <Form.Item
-                name="event_ids"
-                label="Events"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select at least one event!",
-                  },
-                ]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Search and select events"
-                  mode="multiple"
-                  allowClear
-                  suffixIcon={<SearchOutlined />}
-                  filterOption={(input, option) =>
-                    option.children.props.children[1]
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  size="large"
-                >
-                  {filteredEvents?.map((event) => (
-                    <Option key={event.id} value={event.id}>
-                      <div className="font-medium text-gray-900 flex items-center">
-                        <CalendarOutlined className="mr-2 text-blue-500" />
-                        {event.event_name}
-                      </div>
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Divider style={{ margin: "16px 0" }} />
-            </>
-          ) : (
-            <></>
-          )}
+            <EventAndTheaterChooser type={type} form={form} />
 
           <Row gutter={16}>
             <Col xs={24} sm={24}>
