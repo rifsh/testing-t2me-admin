@@ -29,7 +29,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import {
-  fetchOrganizerSingleOfferUpdate,
+  fetchOrganizerSingleScheduleUpdate,
   submitOrganizerOfferUpdate,
   setCommentModalVisibility,
   setActionType,
@@ -57,7 +57,7 @@ const OrganizerOfferDetail = () => {
 
   useEffect(() => {
     if (offerId) {
-      dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
+      dispatch(fetchOrganizerSingleScheduleUpdate({ offer_id: offerId }));
     }
   }, [dispatch, offerId]);
 
@@ -110,7 +110,7 @@ const OrganizerOfferDetail = () => {
 
       if (submitOrganizerOfferUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
-        dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
+        dispatch(fetchOrganizerSingleScheduleUpdate({ offer_id: offerId }));
         navigate(`${APP_PREFIX_PATH}/track/offer/status/list/movie`);
       }
     } catch (error) {

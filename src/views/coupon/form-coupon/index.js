@@ -33,6 +33,7 @@ import {
 } from "store/slices/EventOrganizerSlice";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
+import { EDIT } from "constants/AppConstants";
 
 const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   const {
@@ -73,7 +74,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   }, [error]);
 
   useEffect(() => {
-    if (coupon && mode === "EDIT") {
+    if (coupon && mode === EDIT) {
       // Format key_words for the form if present
       let formattedKeyWords = {};
       if (coupon.key_words && Array.isArray(coupon.key_words)) {
@@ -214,7 +215,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           return values.applicable_days?.includes(dayName);
         }) ?? [];
 
-      if (mode === "EDIT") {
+      if (mode === EDIT) {
 
         let thumbnailData = null;
 
@@ -427,9 +428,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        // addFunction={mode === "EDIT" ? editCoupon : addCoupon}
+        // addFunction={mode === EDIT ? editCoupon : addCoupon}
         addFunction={
-          mode === "EDIT"
+          mode === EDIT
             ? isMakeChanges
               ? makeChangesCoupon
               : editCoupon

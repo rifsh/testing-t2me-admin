@@ -194,6 +194,19 @@ export const fetchOrganizerSingleOfferUpdate = createAsyncThunk(
     }
   }
 );
+export const fetchOrganizerSingleScheduleUpdate = createAsyncThunk(
+  "organizerUpdates/fetchOrganizerSingleScheduleUpdate",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response =
+        await EventOrganizerService.fetchOrganizerSingleScheduleUpdate(params);
+      console.log("-----------Fetching Organizer Updates", response.data[0]);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
 export const fetchOrganizerSingleEventUpdate = createAsyncThunk(
   "organizerUpdates/fetchOrganizerSingleEventUpdate",
   async (params, { rejectWithValue }) => {
@@ -341,6 +354,25 @@ const OrganizerUpdateSlice = createSlice({
       )
       .addCase(
         fetchOrganizerSingleOfferUpdate.rejected,
+        (state, { payload }) => {
+          state.loading = false;
+          state.error = payload;
+        }
+      )
+      .addCase(fetchOrganizerSingleScheduleUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchOrganizerSingleScheduleUpdate.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          state.singleOrganizerUpdate = payload;
+          state.pagination = payload;
+        }
+      )
+      .addCase(
+        fetchOrganizerSingleScheduleUpdate.rejected,
         (state, { payload }) => {
           state.loading = false;
           state.error = payload;
