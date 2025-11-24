@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AUTH_TOKEN } from "constants/AuthConstant";
-import FirebaseService from "services/FirebaseService";
 import AuthService from "services/AuthService";
 import { jwtDecode } from "jwt-decode";
 import UserService from "services/userService";

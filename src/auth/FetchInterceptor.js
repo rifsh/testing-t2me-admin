@@ -280,9 +280,7 @@ service.interceptors.response.use(
     // Show error notification only if it's not a logout request
     if (!error.config.url.includes("/logout")) {
       notification.error(notificationParam);
-    }
-    console.log("samplerrorchecking", error.response);
-    
+    }    
     return Promise.reject(error.response);
   }
 );
