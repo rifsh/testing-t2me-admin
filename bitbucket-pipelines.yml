@@ -1,12 +1,24 @@
-image: atlassian/default-image:3
+image: node:18
+
+options:
+  max-time: 20 # Optional timeout for pipeline
 
 pipelines:
-  branches:
-    feature/**:
-      - step:
-          name: Pipe Line Test
-          script:
-            - echo "🧪 Running Pipe Line Test.."
-            # Check Flutter version            
-            - echo "✅ All tests passed successfully..."  
-      
+  default:
+    - step:
+        name: Run Tests & Coverage
+        caches:
+          - node
+        script:
+          # Install dependencies
+          - npm ci
+
+          # Run Jest tests
+          # --coverage → generate code coverage
+          # --runInBand → avoid parallel execution issues
+          # Jest automatically exits with non-zero if any test fails
+          - npm test -- --coverage --runInBand
+
+        artifacts:
+          # Store coverage report in Bitbucket artifacts
+          - coverage/**

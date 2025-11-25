@@ -221,6 +221,7 @@ export const authSlice = createSlice({
       })
       .addCase(getUserdata.fulfilled, (state, action) => {
         state.loading = false;
+        console.log("action.payloaduserdata", action.payload)
         state.userData = action.payload;
       })
       .addCase(getUserdata.rejected, (state, action) => {

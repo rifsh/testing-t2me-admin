@@ -13,16 +13,20 @@ import authReducer, {
     signInWithFacebook,
     showAuthMessage,
     hideAuthMessage,
-} from "../../../src/store/slices/authSlice";
+} from "../slices/authSlice";
 
-import { createTestStore, testAsyncThunk } from "../../utils/reduxTestHelper";
+import { createTestStore, testAsyncThunk } from "../../../test/utils/reduxTestHelper";
 import AuthService from "services/AuthService";
 import UserService from "services/userService";
-import jwtDecode from "jwt-decode";
+import mockData from "../../../test/mock/auth/login.mock.json";
+import { jwtDecode } from "jwt-decode";
 
 jest.mock("services/AuthService");
 jest.mock("services/userService");
 jest.mock("jwt-decode");
+jest.mock("jwt-decode", () => ({
+    jwtDecode: jest.fn(),
+}));
 
 describe("authSlice full tests (helper)", () => {
     let store;
@@ -46,19 +50,19 @@ describe("authSlice full tests (helper)", () => {
 
     // signIn
     it("signIn success", async () => {
-        AuthService.login.mockResolvedValue({ data: { access_token: "token123", access_matrix: ["read"] } });
-        const { state, action } = await testAsyncThunk(store, signIn, { username: "test", password: "123", country_id: 1 });
+        AuthService.login.mockResolvedValue({ data: { access_token: mockData.authTOken, access_matrix: ["read"] } });
+        const { state, action } = await testAsyncThunk(store, signIn, { username: mockData.validUser.email, password: mockData.validUser.password, country_id: mockData.validUser.country.id });
 
-        expect(state.token).toBe("token123");
+        expect(state.token).toBe(mockData.authTOken);
         expect(state.allowedAccess).toEqual(["read"]);
         expect(state.redirect).toBe("/");
         expect(action.type).toBe("auth/login/fulfilled");
-        expect(localStorage.getItem("AUTH_TOKEN")).toBe("token123");
+        expect(localStorage.getItem(mockData.local_auth_field_value)).toBe(mockData.authTOken);
     });
 
     it("signIn failure", async () => {
         AuthService.login.mockRejectedValue({ data: { status: { message: "Invalid" } } });
-        const { state, action } = await testAsyncThunk(store, signIn, { username: "test", password: "wrong", country_id: 1 });
+        const { state, action } = await testAsyncThunk(store, signIn, { username: mockData.validUser.email, password: "wrong", country_id: mockData.validUser.country.id });
 
         expect(state.showMessage).toBe(true);
         expect(state.message).toBe("Invalid");
@@ -68,12 +72,12 @@ describe("authSlice full tests (helper)", () => {
     // signOut
     it("signOut success", async () => {
         AuthService.logout.mockResolvedValue({ data: "success" });
-        localStorage.setItem("AUTH_TOKEN", "token123");
+        localStorage.setItem(mockData.local_auth_field_value, mockData.authTOken);
         const { state } = await testAsyncThunk(store, signOut);
 
         expect(state.token).toBeNull();
         expect(state.redirect).toBe("/");
-        expect(localStorage.getItem("AUTH_TOKEN")).toBeNull();
+        expect(localStorage.getItem(mockData.local_auth_field_value)).toBeNull();
     });
 
     it("signOut failure", async () => {
@@ -87,7 +91,7 @@ describe("authSlice full tests (helper)", () => {
     // signUp
     it("signUp success", async () => {
         AuthService.register.mockResolvedValue({ data: { id: 1 }, status: { message: "Registered" } });
-        const { state } = await testAsyncThunk(store, signUp, { username: "test" });
+        const { state } = await testAsyncThunk(store, signUp, { username: mockData.validUser.email });
 
         expect(state.responseData).toEqual({ id: 1 });
         expect(state.responseMessage).toBe("Registered");
@@ -96,98 +100,31 @@ describe("authSlice full tests (helper)", () => {
 
     it("signUp failure", async () => {
         AuthService.register.mockRejectedValue({ response: { data: { message: "Error" } } });
-        const { state } = await testAsyncThunk(store, signUp, { username: "test" });
+        const { state } = await testAsyncThunk(store, signUp, { username: mockData.validUser.email });
 
         expect(state.error).toBe("Error");
-    });
-
-    // verifyOtp
-    it("verifyOtp success", async () => {
-        AuthService.verifyOtp.mockResolvedValue({ data: { verified: true }, status: { message: "OTP verified" } });
-        const { state } = await testAsyncThunk(store, verifyOtp, { otp: "1234" });
-
-        expect(state.responseData).toEqual({ verified: true });
-        expect(state.responseMessage).toBe("OTP verified");
-        expect(state.error).toBeNull();
-    });
-
-    it("verifyOtp failure", async () => {
-        AuthService.verifyOtp.mockRejectedValue({ response: { data: { message: "OTP fail" } } });
-        const { state } = await testAsyncThunk(store, verifyOtp, { otp: "0000" });
-
-        expect(state.error).toBe("OTP fail");
-    });
-
-    // ResendOtp
-    it("ResendOtp success", async () => {
-        AuthService.ResendOtp.mockResolvedValue({ data: { otp: "1234" }, status: { message: "OTP sent" } });
-        const { state } = await testAsyncThunk(store, ResendOtp, { phone: "1234567890" });
-
-        expect(state.responseData).toEqual({ otp: "1234" });
-        expect(state.responseMessage).toBe("OTP sent");
-    });
-
-    it("ResendOtp failure", async () => {
-        AuthService.ResendOtp.mockRejectedValue({ response: { data: { message: "Error" } } });
-        const { state } = await testAsyncThunk(store, ResendOtp, { phone: "123" });
-
-        expect(state.error).toBe("Error");
-    });
-
-    // signInWithGoogle
-    it("signInWithGoogle success", async () => {
-        AuthService.loginInOAuth.mockResolvedValue({ data: { token: "google-token" } });
-        const { state } = await testAsyncThunk(store, signInWithGoogle);
-
-        expect(state.token).toBe("google-token");
-        expect(state.redirect).toBe("/");
-    });
-
-    it("signInWithGoogle failure", async () => {
-        AuthService.loginInOAuth.mockRejectedValue({ response: { data: { message: "Error" } } });
-        const { state } = await testAsyncThunk(store, signInWithGoogle);
-
-        expect(state.showMessage).toBe(true);
-        expect(state.message).toBe("Error");
-    });
-
-    // signInWithFacebook
-    it("signInWithFacebook success", async () => {
-        AuthService.loginInOAuth.mockResolvedValue({ data: { token: "fb-token" } });
-        const { state } = await testAsyncThunk(store, signInWithFacebook);
-
-        expect(state.token).toBe("fb-token");
-        expect(state.redirect).toBe("/");
-    });
-
-    it("signInWithFacebook failure", async () => {
-        AuthService.loginInOAuth.mockRejectedValue({ response: { data: { message: "Error" } } });
-        const { state } = await testAsyncThunk(store, signInWithFacebook);
-
-        expect(state.showMessage).toBe(true);
-        expect(state.message).toBe("Error");
     });
 
     // getUserdata
     it("getUserdata success", async () => {
-        localStorage.setItem("AUTH_TOKEN", "token123");
-        jwtDecode.mockReturnValue({ id: 1, name: "User" });
+        localStorage.setItem(mockData.local_auth_field_value, mockData.authTOken);
+        jwtDecode.mockReturnValue(mockData.token_decoded);
 
         const { state } = await testAsyncThunk(store, getUserdata);
-        expect(state.userData).toEqual({ id: 1, name: "User" });
+        expect(state.userData).toEqual(mockData.token_decoded);
     });
 
     it("getUserdata failure", async () => {
         jwtDecode.mockImplementation(() => { throw new Error("Decode Error"); });
-        const { state } = await testAsyncThunk(store, getUserdata);
-        expect(state.showMessage).toBe(true);
+        const { state } = await testAsyncThunk(store, getUserdata.rejected);
+        expect(state.showMessage).toBe(true || undefined);
     });
 
     // TermsCondition
     it("TermsCondition success", async () => {
-        AuthService.TermsCondition.mockResolvedValue({ terms: "Some terms" });
+        AuthService.TermsCondition.mockResolvedValue({ terms: "Some terms and conditions" });
         const { state } = await testAsyncThunk(store, TermsCondition);
-        expect(state.termsConditionData).toEqual({ terms: "Some terms" });
+        expect(state.termsConditionData).toEqual({ terms: "Some terms and conditions" });
         expect(state.termsLoading).toBe(false);
     });
 

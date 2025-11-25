@@ -9,9 +9,9 @@ import reducer, {
     onSwitchTheme,
     onDirectionChange,
     onBlankLayout,
-} from "../../../src/store/slices/themeSlice";
+} from "../slices/themeSlice";
 
-import { initialState } from "../../../src/store/slices/themeSlice";
+import { initialState } from "../slices/themeSlice";
 import { THEME_CONFIG } from "configs/AppConfig";
 
 describe("themeSlice", () => {

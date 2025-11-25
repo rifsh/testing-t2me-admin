@@ -20,5 +20,20 @@
             "schema_name": "india_schema"
         }
     ],
+    "local_auth_field_value": "auth_token",
+    "authTOken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzaGFtaWw3MDdAZ21haWwuY29tIiwidXNlcm5hbWUiOiJzaGFtaWw3MDciLCJpc19zdXBlcnVzZXIiOnRydWUsInJvbGUiOiJTdXBlciBBZG1pbiIsInNjaGVtYSI6InRlbmFudF91bml0ZWRfYXJhYl9lbWlyYXRlcyIsImNvdW50cnlfaWQiOjMsInJvbGVfaWQiOjEsInByb2ZpbGUiOiJpbWFnZXMiLCJsYXN0X2FjdGl2aXR5IjoxNzY0MDQ0ODQ1LjkzMzkxMywiZXhwIjoxNzY2NjM2ODQ1fQ.xrIN5thr7b9yZfNda4nS3rwUhK4mkVfN-fIxD7sOows",
+    "token_decoded": {
+        "id": 1,
+        "email": "shamil707@gmail.com",
+        "username": "shamil707",
+        "is_superuser": true,
+        "role": "Super Admin",
+        "schema": "tenant_united_arab_emirates",
+        "country_id": 3,
+        "role_id": 1,
+        "profile": "images",
+        "last_activity": 1764045911.570866,
+        "exp": 1766637910
+    },
     "errorMessage": "Invalid credentials"
 }
