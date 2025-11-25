@@ -136,7 +136,7 @@ const ALL_PROTECTED_ROUTES = {
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports")
+      import("views/app-views/dashboards/organizer/index.js")
     ),
     category: "orders",
   },
@@ -144,7 +144,7 @@ const ALL_PROTECTED_ROUTES = {
     key: "super-admin.reports",
     path: `${APP_PREFIX_PATH}/super-admin/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/super-admin/reports")
+      import("views/app-views/dashboards/super-admin/index.js")
     ),
     category: "orders",
   },

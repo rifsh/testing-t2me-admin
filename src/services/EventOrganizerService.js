@@ -248,6 +248,18 @@ EventOrganizerService.makeChangeEvent = function (data, action, pageData) {
     }),
   });
 };
+EventOrganizerService.makeChangeVenue = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: ApiConstant.ORGANIZER_VENUE_MAKE_CHANGES_URL,
+    method: "put",
+    data: data,
+    params: Utils.filterParams({
+      ...pageData,
+      action: handleAction(encodedAction),
+    }),
+  });
+};
 EventOrganizerService.makeChangeSeat = function (data, action, pageData) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({

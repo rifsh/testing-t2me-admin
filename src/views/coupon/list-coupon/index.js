@@ -75,7 +75,7 @@ const CouponList = () => {
     dispatch(
       fetchAllCoupons({
         ...DEFAULT_PAGE_SIZE,
-        organizer: isOrganizer() ? false : null,
+        // organizer: isOrganizer() ? false : null,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );

@@ -324,6 +324,22 @@ export const makeChangeEvent = createAsyncThunk(
     }
   }
 );
+export const makeChangeVenue = createAsyncThunk(
+  "organizerUpdates/makeChangeVenue",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(pageData, "DATA IN SERVICE");
+      const response = await EventOrganizerService.makeChangeVenue(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 export const makeChangeSeat = createAsyncThunk(
   "organizerUpdates/makeChangeSeat",
   async ({ data, action, pageData }, { rejectWithValue }) => {
@@ -425,6 +441,18 @@ const OrganizerUpdateSlice = createSlice({
         state.organizerUpdateResponseData = payload.data;
       })
       .addCase(makeChangeEvent.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(makeChangeVenue.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(makeChangeVenue.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.organizerUpdateResponseData = payload.data;
+      })
+      .addCase(makeChangeVenue.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })

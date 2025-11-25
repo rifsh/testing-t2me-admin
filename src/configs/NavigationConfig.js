@@ -1195,7 +1195,7 @@ const ROLE_NAVIGATION_ACCESS = {
     "general.venue",
 
     // Event Services
-    "event.type",
+   
     "event.offer",
     "event.coupon",
     "event.ticket",
