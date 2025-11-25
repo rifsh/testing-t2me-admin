@@ -52,16 +52,11 @@ const clearAllCaches = async () => {
 };
 
 function App() {
-  console.log("env", process.env.NODE_ENV);
   const currentUser = getCurrentUser();
 
   useEffect(() => {
     // Clear caches on first load
     clearAllCaches();
-
-    if (currentUser) {
-      console.log("appcurrentuser", currentUser);
-    }
   }, []); // Empty dependency array ensures this runs only once on mount
 
   return (

@@ -1,0 +1,41 @@
+{
+    "userReports": {
+        "data": {
+            "items": [
+                {
+                    "id": 1,
+                    "username": "Event Organizer 1",
+                    "email": "org1@example.com",
+                    "event_count": 45,
+                    "movie_count": 0,
+                    "total_revenue": 25000.75,
+                    "revenue_by_country": [
+                        {
+                            "currency_code": "USD",
+                            "amount": 25000.75
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "username": "Movie Theater 1",
+                    "email": "theater1@example.com",
+                    "event_count": 0,
+                    "movie_count": 25,
+                    "total_revenue": 15000.50,
+                    "revenue_by_country": [
+                        {
+                            "currency_code": "USD",
+                            "amount": 15000.50
+                        }
+                    ]
+                }
+            ]
+        },
+        "pagination": {
+            "current": 1,
+            "pageSize": 10,
+            "total": 2
+        }
+    }
+}

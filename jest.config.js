@@ -3,6 +3,7 @@ module.exports = {
     setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
     transformIgnorePatterns: [
         "/node_modules/(?!(@firebase|firebase|uuid)/)",
+        "/node_modules/(?!(jspdf|@babel/runtime|fflate|fast-png)/)",
         "/node_modules/(?!(rc-pagination|antd)/)"
     ],
 

@@ -1,7 +1,7 @@
 image: node:18
 
 options:
-  max-time: 20 # Optional timeout for pipeline
+  max-time: 20
 
 pipelines:
   default:
@@ -10,15 +10,11 @@ pipelines:
         caches:
           - node
         script:
-          # Install dependencies
-          - npm ci
+          # Make your script executable
+          - chmod +x test/scripts/run-tests.sh
 
-          # Run Jest tests
-          # --coverage → generate code coverage
-          # --runInBand → avoid parallel execution issues
-          # Jest automatically exits with non-zero if any test fails
-          - npm test -- --coverage --runInBand
+          # Run your custom test script
+          - ./test/scripts/run-tests.sh
 
         artifacts:
-          # Store coverage report in Bitbucket artifacts
           - coverage/**

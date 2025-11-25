@@ -19,8 +19,19 @@ const SUPPRESSED_ERROR_PATTERNS = [
     'was not wrapped in act',
     'React Router',
     'Not implemented: HTMLFormElement.prototype.submit',
+    'Consider adding an error boundary',
 ];
-const SUPPRESSED_WARN_PATTERNS = ['componentWillReceiveProps', 'componentWillMount'];
+
+const SUPPRESSED_WARN_PATTERNS = [
+    'componentWillReceiveProps',
+    'componentWillMount',
+    'styles-insertion-point',
+    'React Router Future Flag Warning',
+    'v7_startTransition',
+    'v7_relativeSplatPath',
+    '[antd: Card]',
+    '`headStyle` is deprecated',
+];
 
 // ============================================================================
 // CONSOLE OVERRIDES
@@ -46,6 +57,13 @@ console.warn = (...args) => {
     originalWarn.apply(console, args);
 };
 
+console.log = (...args) => {
+    // Suppress all console.logs in test environment unless DEBUG_MODE is on
+    if (DEBUG_MODE) {
+        originalLog.apply(console, args);
+    }
+};
+
 global.testLog = (...args) => {
     if (DEBUG_MODE) originalLog.call(console, '🧪 TEST LOG:', ...args);
 };
@@ -53,9 +71,9 @@ global.testLog = (...args) => {
 if (DEBUG_MODE) {
     afterAll(() => {
         if (suppressedMessages.errors.length || suppressedMessages.warnings.length) {
-            console.log('\n📊 SUPPRESSED MESSAGES SUMMARY:');
-            console.log(`  Errors suppressed: ${suppressedMessages.errors.length}`);
-            console.log(`  Warnings suppressed: ${suppressedMessages.warnings.length}`);
+            originalLog.call(console, '\n📊 SUPPRESSED MESSAGES SUMMARY:');
+            originalLog.call(console, `  Errors suppressed: ${suppressedMessages.errors.length}`);
+            originalLog.call(console, `  Warnings suppressed: ${suppressedMessages.warnings.length}`);
         }
     });
 }
@@ -95,10 +113,33 @@ global.ResizeObserver = class {
 Object.defineProperty(window, 'scrollTo', { writable: true, value: jest.fn() });
 
 // ============================================================================
+// MOCK DOCUMENT HEAD FOR THEME SWITCHER
+// ============================================================================
+beforeAll(() => {
+    // Create a mock comment node for react-css-theme-switcher
+    const comment = document.createComment('styles-insertion-point');
+    document.head.appendChild(comment);
+});
+
+// ============================================================================
 // MOCK STORAGE
 // ============================================================================
-const localStorageMock = { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn(), clear: jest.fn(), length: 0, key: jest.fn() };
-const sessionStorageMock = { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn(), clear: jest.fn(), length: 0, key: jest.fn() };
+const localStorageMock = {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+    clear: jest.fn(),
+    length: 0,
+    key: jest.fn()
+};
+const sessionStorageMock = {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+    clear: jest.fn(),
+    length: 0,
+    key: jest.fn()
+};
 global.localStorage = localStorageMock;
 global.sessionStorage = sessionStorageMock;
 
@@ -107,8 +148,8 @@ global.sessionStorage = sessionStorageMock;
 // ============================================================================
 delete window.location;
 window.location = {
-    href: '[http://localhost](http://localhost)',
-    origin: '[http://localhost](http://localhost)',
+    href: 'http://localhost',
+    origin: 'http://localhost',
     protocol: 'http:',
     host: 'localhost',
     hostname: 'localhost',
@@ -137,7 +178,13 @@ window.getComputedStyle = jest.fn().mockImplementation(() => ({
 global.URL.createObjectURL = jest.fn(() => 'mock-object-url');
 global.URL.revokeObjectURL = jest.fn();
 global.fetch = jest.fn();
-global.Image = class { constructor() { setTimeout(() => { this.onload && this.onload(); }, 100); } };
+global.Image = class {
+    constructor() {
+        setTimeout(() => {
+            this.onload && this.onload();
+        }, 100);
+    }
+};
 
 // ============================================================================
 // MOCK ANIMATION
@@ -148,13 +195,31 @@ global.cancelAnimationFrame = id => clearTimeout(id);
 // ============================================================================
 // ANT DESIGN MOCKS
 // ============================================================================
-jest.mock('antd/lib/message', () => ({ success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn(), warn: jest.fn(), loading: jest.fn() }));
-jest.mock('antd/lib/notification', () => ({ success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn(), warn: jest.fn(), open: jest.fn() }));
+jest.mock('antd/lib/message', () => ({
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    warning: jest.fn(),
+    warn: jest.fn(),
+    loading: jest.fn()
+}));
+jest.mock('antd/lib/notification', () => ({
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    warning: jest.fn(),
+    warn: jest.fn(),
+    open: jest.fn()
+}));
 
 // ============================================================================
 // ENVIRONMENT
 // ============================================================================
-process.env = { ...process.env, NODE_ENV: 'test', REACT_APP_API_URL: '[http://localhost:3000/api](http://localhost:3000/api)' };
+process.env = {
+    ...process.env,
+    NODE_ENV: 'test',
+    REACT_APP_API_URL: 'http://localhost:3000/api'
+};
 jest.setTimeout(10000);
 
 // ============================================================================
@@ -174,8 +239,17 @@ global.testUtils = {
     waitFor: (callback, timeout = 3000) => new Promise((resolve, reject) => {
         const start = Date.now();
         const interval = setInterval(() => {
-            try { callback(); clearInterval(interval); resolve(); }
-            catch (e) { if (Date.now() - start > timeout) { clearInterval(interval); reject(e); } }
+            try {
+                callback();
+                clearInterval(interval);
+                resolve();
+            }
+            catch (e) {
+                if (Date.now() - start > timeout) {
+                    clearInterval(interval);
+                    reject(e);
+                }
+            }
         }, 50);
     }),
 };
@@ -186,7 +260,12 @@ global.testUtils = {
 expect.extend({
     toBeWithinRange(received, floor, ceiling) {
         const pass = received >= floor && received <= ceiling;
-        return { pass, message: () => pass ? `expected ${received} not to be within range ${floor} - ${ceiling}` : `expected ${received} to be within range ${floor} - ${ceiling}` };
+        return {
+            pass,
+            message: () => pass
+                ? `expected ${received} not to be within range ${floor} - ${ceiling}`
+                : `expected ${received} to be within range ${floor} - ${ceiling}`
+        };
     },
 });
 
@@ -196,7 +275,11 @@ expect.extend({
 Object.defineProperty(global, 'crypto', {
     value: {
         getRandomValues: arr => arr.map((_, i) => Math.floor(Math.random() * 256)),
-        randomUUID: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = (Math.random() * 16) | 0; const v = c === 'x' ? r : (r & 0x3) | 0x8; return v.toString(16); }),
+        randomUUID: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        }),
     },
 });
 
@@ -204,14 +287,35 @@ Object.defineProperty(global, 'crypto', {
 // MOCK CANVAS (for chart libs)
 // ============================================================================
 HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
-    fillRect: jest.fn(), clearRect: jest.fn(), getImageData: jest.fn(),
-    putImageData: jest.fn(), createImageData: jest.fn(), setTransform: jest.fn(),
-    drawImage: jest.fn(), save: jest.fn(), fillText: jest.fn(), restore: jest.fn(),
-    beginPath: jest.fn(), moveTo: jest.fn(), lineTo: jest.fn(), closePath: jest.fn(),
-    stroke: jest.fn(), translate: jest.fn(), scale: jest.fn(), rotate: jest.fn(),
-    arc: jest.fn(), fill: jest.fn(), measureText: jest.fn(() => ({ width: 0 })), transform: jest.fn(), rect: jest.fn(), clip: jest.fn()
+    fillRect: jest.fn(),
+    clearRect: jest.fn(),
+    getImageData: jest.fn(),
+    putImageData: jest.fn(),
+    createImageData: jest.fn(),
+    setTransform: jest.fn(),
+    drawImage: jest.fn(),
+    save: jest.fn(),
+    fillText: jest.fn(),
+    restore: jest.fn(),
+    beginPath: jest.fn(),
+    moveTo: jest.fn(),
+    lineTo: jest.fn(),
+    closePath: jest.fn(),
+    stroke: jest.fn(),
+    translate: jest.fn(),
+    scale: jest.fn(),
+    rotate: jest.fn(),
+    arc: jest.fn(),
+    fill: jest.fn(),
+    measureText: jest.fn(() => ({ width: 0 })),
+    transform: jest.fn(),
+    rect: jest.fn(),
+    clip: jest.fn()
 }));
 HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,mock');
 HTMLCanvasElement.prototype.toBlob = jest.fn(callback => callback(new Blob(['mock'], { type: 'image/png' })));
 
+// ============================================================================
+// EXPORTS
+// ============================================================================
 export { originalError, originalWarn, originalLog };

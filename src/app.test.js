@@ -57,14 +57,4 @@ describe("App component", () => {
             jest.spyOn(sessionStorage.__proto__, 'clear').mockImplementation(() => { });
         });
     });
-
-    it("logs environment on mount", () => {
-        const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => { });
-
-        render(<App />);
-
-        expect(consoleSpy).toHaveBeenCalledWith("env", process.env.NODE_ENV);
-
-        consoleSpy.mockRestore();
-    });
 });

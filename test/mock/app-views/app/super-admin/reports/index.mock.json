@@ -1,0 +1,256 @@
+{
+    "reportData": {
+        "total_users_in_events": 150,
+        "active_users_in_events": 120,
+        "total_events": 450,
+        "total_event_revenue": 125000.50,
+        "total_users_in_theatres": 80,
+        "active_users_in_theatres": 65,
+        "total_movies": 220,
+        "total_movie_revenue": 89500.75,
+        "revenue_by_country": [
+            {
+                "country_id": 1,
+                "country_name": "United States",
+                "currency_code": "USD",
+                "total_revenue": 125000.50
+            }
+        ]
+    },
+    "userReportsData": [
+        {
+            "id": 1,
+            "username": "John Doe",
+            "email": "john.doe@example.com",
+            "event_count": 25,
+            "movie_count": 15,
+            "total_revenue": 15250.00,
+            "revenue_by_country": [
+                {
+                    "country_id": 1,
+                    "country_name": "United States",
+                    "currency_code": "USD",
+                    "revenue": 15250.00
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "username": "Jane Smith",
+            "email": "jane.smith@example.com",
+            "event_count": 32,
+            "movie_count": 18,
+            "total_revenue": 22400.50,
+            "revenue_by_country": [
+                {
+                    "country_id": 1,
+                    "country_name": "United States",
+                    "currency_code": "USD",
+                    "revenue": 22400.50
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "username": "Mike Johnson",
+            "email": "mike.johnson@example.com",
+            "event_count": 18,
+            "movie_count": 10,
+            "total_revenue": 9800.25,
+            "revenue_by_country": [
+                {
+                    "country_id": 1,
+                    "country_name": "United States",
+                    "currency_code": "USD",
+                    "revenue": 9800.25
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "username": "Sarah Williams",
+            "email": "sarah.williams@example.com",
+            "event_count": 40,
+            "movie_count": 25,
+            "total_revenue": 31500.00,
+            "revenue_by_country": [
+                {
+                    "country_id": 1,
+                    "country_name": "United States",
+                    "currency_code": "USD",
+                    "revenue": 31500.00
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "username": "David Brown",
+            "email": "david.brown@example.com",
+            "event_count": 15,
+            "movie_count": 8,
+            "total_revenue": 7200.75,
+            "revenue_by_country": [
+                {
+                    "country_id": 1,
+                    "country_name": "United States",
+                    "currency_code": "USD",
+                    "revenue": 7200.75
+                }
+            ]
+        }
+    ],
+    "countryList": [
+        {
+            "items": [
+                {
+                    "id": 1,
+                    "name": "United States",
+                    "code": "US",
+                    "currency_code": "USD"
+                },
+                {
+                    "id": 2,
+                    "name": "United Kingdom",
+                    "code": "GB",
+                    "currency_code": "GBP"
+                },
+                {
+                    "id": 3,
+                    "name": "Canada",
+                    "code": "CA",
+                    "currency_code": "CAD"
+                },
+                {
+                    "id": 4,
+                    "name": "Australia",
+                    "code": "AU",
+                    "currency_code": "AUD"
+                }
+            ]
+        }
+    ],
+    "pagination": {
+        "current": 1,
+        "pageSize": 10,
+        "total": 5
+    },
+    "emptyReportData": {
+        "total_users_in_events": 0,
+        "active_users_in_events": 0,
+        "total_events": 0,
+        "total_event_revenue": 0,
+        "total_users_in_theatres": 0,
+        "active_users_in_theatres": 0,
+        "total_movies": 0,
+        "total_movie_revenue": 0,
+        "revenue_by_country": []
+    },
+    "emptyUserReportsData": [],
+    "nullRevenueData": {
+        "total_users_in_events": 150,
+        "active_users_in_events": 120,
+        "total_events": 450,
+        "total_event_revenue": null,
+        "total_users_in_theatres": 80,
+        "active_users_in_theatres": 65,
+        "total_movies": 220,
+        "total_movie_revenue": null,
+        "revenue_by_country": []
+    },
+    "largeNumbersData": {
+        "total_users_in_events": 999999999,
+        "active_users_in_events": 888888888,
+        "total_events": 777777777,
+        "total_event_revenue": 999999999.99,
+        "total_users_in_theatres": 666666666,
+        "active_users_in_theatres": 555555555,
+        "total_movies": 444444444,
+        "total_movie_revenue": 888888888.88,
+        "revenue_by_country": [
+            {
+                "country_id": 1,
+                "country_name": "United States",
+                "currency_code": "USD",
+                "total_revenue": 999999999.99
+            }
+        ]
+    },
+    "malformedUserData": [
+        {
+            "id": 1,
+            "username": null,
+            "email": "undefined",
+            "event_count": "not_a_number",
+            "total_revenue": "invalid"
+        },
+        {
+            "id": 2,
+            "incomplete": "data"
+        }
+    ],
+    "noCurrencyCodeData": {
+        "total_users_in_events": 150,
+        "active_users_in_events": 120,
+        "total_events": 450,
+        "total_event_revenue": 125000.50,
+        "revenue_by_country": [
+            {
+                "country_id": 1,
+                "country_name": "United States",
+                "currency_code": null,
+                "total_revenue": 125000.50
+            }
+        ]
+    },
+    "zeroRevenueUsers": [
+        {
+            "id": 1,
+            "username": "No Revenue User",
+            "email": "norevenue@example.com",
+            "event_count": 5,
+            "movie_count": 3,
+            "total_revenue": 0,
+            "revenue_by_country": []
+        }
+    ],
+    "multiCurrencyData": {
+        "revenue_by_country": [
+            {
+                "country_id": 1,
+                "country_name": "United States",
+                "currency_code": "USD",
+                "total_revenue": 50000.00
+            },
+            {
+                "country_id": 2,
+                "country_name": "United Kingdom",
+                "currency_code": "GBP",
+                "total_revenue": 35000.00
+            },
+            {
+                "country_id": 3,
+                "country_name": "Canada",
+                "currency_code": "CAD",
+                "total_revenue": 40000.00
+            }
+        ]
+    },
+    "longUsernameData": [
+        {
+            "id": 1,
+            "username": "ThisIsAVeryLongUsernameForTestingTruncation",
+            "email": "longusername@example.com",
+            "event_count": 15,
+            "movie_count": 10,
+            "total_revenue": 12000.00,
+            "revenue_by_country": [
+                {
+                    "country_id": 1,
+                    "country_name": "United States",
+                    "currency_code": "USD",
+                    "revenue": 12000.00
+                }
+            ]
+        }
+    ]
+}

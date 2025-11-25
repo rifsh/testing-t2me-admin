@@ -276,8 +276,8 @@ const SuperAdminReport = () => {
                 onClick={() => setActiveTab(tab.key)}
                 disabled={isLoading}
                 className={`flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${activeTab === tab.key
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {tab.key.charAt(0).toUpperCase() + tab.key.slice(1)}
@@ -471,7 +471,12 @@ const SuperAdminReport = () => {
         <Card
           title="Revenue Distribution"
           className="!p-3 shadow-xs border border-gray-100"
-          headStyle={{ padding: "0.75rem", fontSize: "0.875rem" }}
+          styles={{
+            header: {
+              padding: "0.75rem",
+              fontSize: "0.875rem"
+            }
+          }}
         >
           <div className="h-48 sm:h-56 md:h-64">
             <Bar
@@ -500,7 +505,12 @@ const SuperAdminReport = () => {
         <Card
           title="Activity Distribution"
           className="!p-3 shadow-xs border border-gray-100"
-          headStyle={{ padding: "0.75rem", fontSize: "0.875rem" }}
+          styles={{
+            header: {
+              padding: "0.75rem",
+              fontSize: "0.875rem"
+            }
+          }}
         >
           <div className="h-48 sm:h-56 md:h-64">
             <Bar
@@ -536,7 +546,12 @@ const SuperAdminReport = () => {
       <Card
         title="Platform Summary"
         className="!p-3 shadow-xs border border-gray-100 mb-4"
-        headStyle={{ padding: "0.75rem", fontSize: "0.875rem" }}
+        styles={{
+          header: {
+            padding: "0.75rem",
+            fontSize: "0.875rem"
+          }
+        }}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div className="p-3 bg-gray-50 rounded-lg">
