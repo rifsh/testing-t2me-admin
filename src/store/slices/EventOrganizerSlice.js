@@ -292,6 +292,54 @@ export const makeChangeOffer = createAsyncThunk(
     }
   }
 );
+export const makeChangesCoupon = createAsyncThunk(
+  "organizerUpdates/makeChangesCoupon",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(pageData, "DATA IN SERVICE");
+      const response = await EventOrganizerService.makeChangeCoupon(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+export const makeChangeEvent = createAsyncThunk(
+  "organizerUpdates/makeChangeEvent",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(pageData, "DATA IN SERVICE");
+      const response = await EventOrganizerService.makeChangeEvent(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+export const makeChangeSeat = createAsyncThunk(
+  "organizerUpdates/makeChangeSeat",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(pageData, "DATA IN SERVICE");
+      const response = await EventOrganizerService.makeChangeSeat(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const OrganizerUpdateSlice = createSlice({
   name: "organizerUpdates",
@@ -353,6 +401,30 @@ const OrganizerUpdateSlice = createSlice({
         state.organizerUpdateResponseData = payload.data;
       })
       .addCase(makeChangeOffer.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(makeChangesCoupon.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(makeChangesCoupon.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.organizerUpdateResponseData = payload.data;
+      })
+      .addCase(makeChangesCoupon.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(makeChangeEvent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(makeChangeEvent.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.organizerUpdateResponseData = payload.data;
+      })
+      .addCase(makeChangeEvent.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })

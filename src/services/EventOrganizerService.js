@@ -224,4 +224,40 @@ EventOrganizerService.makeChangeOffer = function (data, action, pageData) {
     }),
   });
 };
+EventOrganizerService.makeChangeCoupon = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: ApiConstant.ORGANIZER_COUPON_MAKE_CHANGES_URL,
+    method: "put",
+    data: data,
+    params: Utils.filterParams({
+      ...pageData,
+      action: handleAction(encodedAction),
+    }),
+  });
+};
+EventOrganizerService.makeChangeEvent = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: ApiConstant.ORGANIZER_EVENT_MAKE_CHANGES_URL,
+    method: "put",
+    data: data,
+    params: Utils.filterParams({
+      ...pageData,
+      action: handleAction(encodedAction),
+    }),
+  });
+};
+EventOrganizerService.makeChangeSeat = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: ApiConstant.ORGANIZER_SEAT_MAKE_CHANGES_URL,
+    method: "put",
+    data: data,
+    params: Utils.filterParams({
+      ...pageData,
+      action: handleAction(encodedAction),
+    }),
+  });
+};
 export default EventOrganizerService;

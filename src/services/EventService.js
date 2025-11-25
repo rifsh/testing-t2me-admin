@@ -30,20 +30,6 @@ EventsService.addEventType = function (data, action) {
     params: Utils.filterParams({ action: encodedAction }),
   });
 };
-EventsService.makeChangeEvent = function (data, action, pageData) {
-  const encodedAction = encodeURIComponent(handleAction(action));
-  const url = ApiConstant.ORGANIZER_EVENT_MAKE_CHANGES_URL;
-  const params = {
-    action: encodedAction,
-    ...Utils.filterParams(pageData),
-  };
-  return fetch({
-    url: url,
-    method: "put",
-    data: data,
-    params: params,
-  });
-};
 EventsService.getAllEvent = function (pageData) {
   const url = Utils.getUrlByUserRole(
     ApiConstant.EVENT_URL,

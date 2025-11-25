@@ -68,7 +68,7 @@ const OrganizerOfferDetail = () => {
 
   const handleMakeChanges = () => {
     navigate(
-      `${APP_PREFIX_PATH}/offer/edit/${seatId}/${type}?isMakeChange=${true}`
+      `${APP_PREFIX_PATH}/seat/event/edit/${seatId}?isMakeChange=${true}`
     );
   };
 

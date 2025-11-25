@@ -484,7 +484,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "event.seat.edit": {
     key: "seat.event.edit",
-    path: `${APP_PREFIX_PATH}/seat/event/edit/:seatId`,
+    path: `${APP_PREFIX_PATH}/seat/:type/edit/:seatId`,
     component: React.lazy(() => import("views/seat/event/edit-seat")),
     category: "services",
     subcategory: "event",
