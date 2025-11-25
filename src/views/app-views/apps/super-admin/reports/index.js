@@ -35,8 +35,6 @@ const SuperAdminReport = () => {
   const [activeTab, setActiveTab] = useState("events");
   const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState(true);
 
   const [filters, setFilters] = useState({
     search: "",
@@ -270,9 +268,9 @@ const SuperAdminReport = () => {
             { key: "movies", enabled: APP_FEATURE_FLAGS.MOVIE },
           ]
             .filter((tab) => tab.enabled)
-            .map((tab) => (
+            .map((tab, index) => (
               <button
-                key={tab.key}
+                key={index}
                 onClick={() => setActiveTab(tab.key)}
                 disabled={isLoading}
                 className={`flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${activeTab === tab.key
@@ -393,7 +391,7 @@ const SuperAdminReport = () => {
             color: "green",
           },
           {
-            title: activeTab === "events" ? "Total Events" : "Total Movies",
+            title: activeTab === "events" ? "Total Event" : "Total Movies",
             value:
               activeTab === "events"
                 ? reportData?.total_events

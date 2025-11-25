@@ -77,3 +77,6 @@ function App() {
 }
 
 export default App;
+
+// "test:coverage": "jest --coverage",
+// "test:ci": "jest --coverage --runInBand"
