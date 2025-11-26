@@ -25,7 +25,7 @@ export const fetchAnnualStatsforEvents = createAsyncThunk(
   "statistics/fetchAnnualStatsforEvents",
   async (_, { rejectWithValue }) => {
     try {
-      if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
+      if (ENABLE_MOCK_API && ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchAnnualStatsForEvents;
         return response.data; // Return mock data if mock API is enabled
       } else {
@@ -45,7 +45,7 @@ export const fetchUserStatsForUsers = createAsyncThunk(
   "statistics/fetchUserStatsForUsers",
   async (pageData, { rejectWithValue }) => {
     try {
-      if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
+      if (ENABLE_MOCK_API && ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchAnnualStatsForUsers;
         return response.data[0]; // Return mock data if mock API is enabled
       } else {
@@ -67,7 +67,7 @@ export const fetchUserStatsForSchedules = createAsyncThunk(
   "statistics/fetchUserStatsForSchedules",
   async (_, { rejectWithValue }) => {
     try {
-      if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
+      if (ENABLE_MOCK_API && ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchUserStatsForSchedules;
         return response.data; // Return mock data if mock API is enabled
       } else {
