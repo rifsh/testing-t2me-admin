@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button, message, Alert, Col } from "antd";
+import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
 import CouponFormFields from "../components/CouponFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import moment from "moment";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import {
   addCoupon,
@@ -14,7 +13,6 @@ import {
   setCouponDialogVisible,
   setCouponModalLoading,
   setIsDateRequired,
-  makeChangesCoupon,
   setGeneratedCouponCode,
 } from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
@@ -23,12 +21,12 @@ import {
   setSelectedSubmitItem,
 } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import Utils from "utils";
 import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
 import {
+  makeChangesCoupon,
   setComment,
   setCommentModalVisibility,
 } from "store/slices/EventOrganizerSlice";
@@ -96,14 +94,14 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       const thumbnailFile =
         coupon.thumbnail_image && coupon.thumbnail_image !== "images"
           ? [
-            {
-              uid: "thumbnail-1",
-              name: coupon.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${coupon.thumbnail_image}`,
-              id: null, // Offers typically don't have media id for thumbnail
-            },
-          ]
+              {
+                uid: "thumbnail-1",
+                name: coupon.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${coupon.thumbnail_image}`,
+                id: null, // Offers typically don't have media id for thumbnail
+              },
+            ]
           : [];
 
       const formData = {
@@ -222,7 +220,6 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         }) ?? [];
 
       if (mode === EDIT) {
-
         let thumbnailData = null;
 
         if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
@@ -318,42 +315,18 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       },
       id: coupon.id,
     };
-    const pageData = {
-      coupon_id: Number(editData.id),
-    };
-    console.log("editData", editData);
 
     try {
-      const resultAction = await dispatch(
-        makeChangesCoupon({
-          data: editData,
-          action: ActionType.SUBMIT,
-          pageData,
-        })
-      );
-
-      if (makeChangesCoupon.fulfilled.match(resultAction)) {
-        console.log("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEssss");
-        dispatch(setComment(""));
-        dispatch(setSelectedCoupon(editData));
-        dispatch(setCommentModalVisibility(false));
-        dispatch(setSelectedSubmitItem(editData));
-        message.success(`Update ${actionType}ed successfully`);
-        // navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
-      }
-
+      dispatch(setComment(""));
+      dispatch(setSelectedCoupon(editData));
+      dispatch(setCommentModalVisibility(false));
       dispatch(setSelectedSubmitItem(editData));
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
     }
-
     dispatch(setComment(""));
     dispatch(setCommentModalVisibility(false));
   };
-
-  useEffect(() => {
-    console.log("isMakeChanges", isMakeChanges);
-  }, [isMakeChanges]);
 
   return (
     <>
@@ -447,6 +420,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         pagination={submitPagination}
         mode={mode}
         setIsUploading={setIsUploading}
+        additionalParams={{ coupon_id: Number(coupon?.id) }}
         form={form}
         formType={"coupon"}
         uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.COUPON}
@@ -460,8 +434,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
-          } Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>

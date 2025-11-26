@@ -69,6 +69,8 @@ export const ApiConstant = {
     "/api/v1/event/tickets/secured/ticketstructure/organizer/make_changes",
   ORGANIZER_EVENT_MAKE_CHANGES_URL:
     "/api/v1/event/events/secured/events/organizer/make_changes",
+  ORGANIZER_SEAT_MAKE_CHANGES_URL:
+    "/api/v1/event/seats/secured/seatstructure/organizer/make_changes",
   ORGANIZER_SCHEDULE_MAKE_CHANGES_URL:
     "/api/v1/event/schedule/secured/schedules/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
@@ -81,6 +83,8 @@ export const ApiConstant = {
     "/api/v1/event/tickets/secured/ticketstructure/organizer/approval",
   ORGANIZER_OFFER_DETAIL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/detail",
+  ORGANIZER_SEAT_DETAIL_URL:
+    "/api/v1/event/seats/secured/seatstructure/organizer/details",
   ORGANIZER_SCHEDULE_DETAIL_URL:
     "/api/v1/event/schedule/secured/schedules/organizer/detail",
   ORGANIZER_EVENT_DETAIL_URL:

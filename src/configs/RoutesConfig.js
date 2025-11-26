@@ -136,7 +136,7 @@ const ALL_PROTECTED_ROUTES = {
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports")
+      import("views/app-views/dashboards/organizer/index.js")
     ),
     category: "orders",
   },
@@ -144,7 +144,7 @@ const ALL_PROTECTED_ROUTES = {
     key: "super-admin.reports",
     path: `${APP_PREFIX_PATH}/super-admin/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/super-admin/reports")
+      import("views/app-views/dashboards/super-admin/index.js")
     ),
     category: "orders",
   },
@@ -484,7 +484,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "event.seat.edit": {
     key: "seat.event.edit",
-    path: `${APP_PREFIX_PATH}/seat/event/edit/:seatId`,
+    path: `${APP_PREFIX_PATH}/seat/:type/edit/:seatId`,
     component: React.lazy(() => import("views/seat/event/edit-seat")),
     category: "services",
     subcategory: "event",
@@ -956,7 +956,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "track.event.seat": {
     key: "trackRequest.seat.status",
-    path: `${APP_PREFIX_PATH}/track/event-seats/status/list`,
+    path: `${APP_PREFIX_PATH}/track/event-seats/status/list/:type`,
     component: React.lazy(() =>
       import("views/track-team/seat-organizer/status-list")
     ),
@@ -1059,6 +1059,16 @@ const ALL_PROTECTED_ROUTES = {
     path: `${APP_PREFIX_PATH}/track/ticket/status/details/:ticketId/:type`,
     component: React.lazy(() =>
       import("views/track-team/ticket-organizer/status-details")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
+  },
+  "track.event.seat.details": {
+    key: "trackRequest.seat.status.details",
+    path: `${APP_PREFIX_PATH}/track/seat/status/details/:seatId/:type`,
+    component: React.lazy(() =>
+      import("views/track-team/seat-organizer/status-details")
     ),
     category: "issues",
     subcategory: "track_requests",

@@ -7,23 +7,14 @@ import {
   Form,
   DatePicker,
   Checkbox,
-  Button,
   Typography,
   Radio,
   Alert,
   InputNumber,
-  Select,
   Divider,
-  message,
 } from "antd";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  CalendarOutlined,
-} from "@ant-design/icons";
 import { setIsDateRequired } from "store/slices/couponSlice";
 import {
   SupportImageFormat,
@@ -33,31 +24,25 @@ import {
 } from "constants/SupportFileConstants";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import { fetchAllEvent } from "store/slices/eventSlice";
-import { EVENT_TYPES, DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
+import { EVENT_TYPES } from "constants/PageConstants";
 import { EventType } from "constants/AppConstants";
 import { isOrganizer } from "configs/UserAccessConfig";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 import ApplicableDays from "components/layout-components/Cards/ApplicableDays";
 import { getAvailableOfferDays } from "store/slices/offerSlice";
 import CouponGenerator from "./CouponGenerator";
+import EventAndTheaterChooser from "components/util-components/FormItems/EventAndTheaterChooser";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
-const { Option } = Select;
 
 function CouponFormFields({ form, type, mode }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
-  const [generatedCoupons, setGeneratedCoupons] = useState([]);
   const { isDateRequired, selectedCouponsDays } = useSelector(
     (state) => state.coupons
   );
   const { handleDeleteImage, deletingImages } = useS3ImageDelete("coupon");
-
-  const { filteredEvents = [], loading = false } = useSelector(
-    (state) => state.event || {}
-  );
 
   const { availableOfferDays, loading: offerLoading } = useSelector(
     (state) => state.offers
@@ -85,61 +70,6 @@ function CouponFormFields({ form, type, mode }) {
       );
     }
   }, [dispatch, type, userIsOrganizer]);
-
-  // const handleCouponsChange = (coupons) => {
-  //   console.log("couponschanges", coupons);
-  //   form.setFieldsValue(formData);
-  //   setGeneratedCoupons(coupons);
-  // };
-
-  // Delete a coupon field with validation
-  const deleteCouponField = (idToDelete) => {
-    // Only allow deletion if there's more than one field
-    if (couponFields.length > 1) {
-      const updatedFields = couponFields.filter(
-        (field) => field.id !== idToDelete
-      );
-      setCouponFields(updatedFields);
-
-      // Clear the form value for the deleted field
-      const currentValues = form.getFieldValue("key_words") || {};
-      const newValues = { ...currentValues };
-      delete newValues[idToDelete];
-      form.setFieldsValue({ key_words: newValues });
-    } else {
-      message.warning('At least one coupon field is required');
-    }
-  };
-
-  // Add validation for duplicate coupon codes
-  const validateCouponUniqueness = (rule, value) => {
-    if (!value) return Promise.resolve();
-
-    const allCoupons = form.getFieldValue('generated_coupons') || [];
-    const duplicate = allCoupons.filter(coupon => coupon.code === value).length > 1;
-
-    if (duplicate) {
-      return Promise.reject('Coupon code must be unique');
-    }
-    return Promise.resolve();
-  };
-
-  // Delete a coupon field
-  // const deleteCouponField = (idToDelete) => {
-  //   // Only allow deletion if there's more than one field
-  //   if (couponFields.length > 1) {
-  //     const updatedFields = couponFields.filter(
-  //       (field) => field.id !== idToDelete
-  //     );
-  //     setCouponFields(updatedFields);
-
-  //     // Clear the form value for the deleted field
-  //     const currentValues = form.getFieldValue("key_words") || {};
-  //     const newValues = { ...currentValues };
-  //     delete newValues[idToDelete];
-  //     form.setFieldsValue({ key_words: newValues });
-  //   }
-  // };
 
   // Calculate rows based on coupon fields
   const getRows = () => {
@@ -240,61 +170,7 @@ function CouponFormFields({ form, type, mode }) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Coupon Details" bordered={false}>
-          {/* ✅ Conditional rendering based on organizer status AND type */}
-          {userIsOrganizer && type === EventType.MOVIE ? (
-            <>
-              <TheaterListForm
-                rules={[{ required: true }]}
-                form={form}
-                mode="multiple"
-                name="theatre_ids"
-                label="Theaters"
-                apiParams={{
-                  organizer: true,
-                }}
-              />
-              <Divider style={{ margin: "16px 0" }} />
-            </>
-          ) : userIsOrganizer && type === EventType.EVENT ? (
-            <>
-              <Form.Item
-                name="event_ids"
-                label="Events"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select at least one event!",
-                  },
-                ]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Search and select events"
-                  mode="multiple"
-                  allowClear
-                  suffixIcon={<SearchOutlined />}
-                  loading={loading}
-                  filterOption={(input, option) =>
-                    option.children.props.children[1]
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  size="large"
-                >
-                  {filteredEvents?.map((event) => (
-                    <Option key={event.id} value={event.id}>
-                      <div className="font-medium text-gray-900 flex items-center">
-                        <CalendarOutlined className="mr-2 text-blue-500" />
-                        {event.event_name}
-                      </div>
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Divider style={{ margin: "16px 0" }} />
-            </>
-          ) : null}
-
+          <EventAndTheaterChooser type={type} form={form} />
           <Form.Item
             name="name"
             label="Coupon Name"
@@ -608,7 +484,11 @@ function CouponFormFields({ form, type, mode }) {
           mode={mode}
           selectedCouponsDays={selectedCouponsDays}
         />
-        <Card title="Coupon Information" bordered={false} style={{ marginTop: "16px" }}>
+        <Card
+          title="Coupon Information"
+          bordered={false}
+          style={{ marginTop: "16px" }}
+        >
           <Alert
             message="Important Note"
             description="Expired coupons cannot be edited."

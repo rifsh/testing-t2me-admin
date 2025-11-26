@@ -35,7 +35,6 @@ import {
   clearSelectedCoupons,
   clearAllTicketData,
   resetEventForm,
-  makeChangeEvent,
 } from "store/slices/eventSlice";
 
 import { fetchSubcategories } from "store/slices/categorySlice";
@@ -67,6 +66,7 @@ import {
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 import { EDIT } from "constants/AppConstants";
 import {
+  makeChangeEvent,
   setComment,
   setCommentModalVisibility,
 } from "store/slices/EventOrganizerSlice";
@@ -103,23 +103,16 @@ export default function EventForm({ eventId, mode = "add", isMakeChange }) {
   } = useSelector((state) => state.event);
 
   // Add LEAD mode state
-  const { singleLeadEvent, error: leadError } = useSelector(
-    (state) => state.leadEvents
-  );
+  const { singleLeadEvent } = useSelector((state) => state.leadEvents);
   const {
-    singleOrganizerUpdate,
     loading: organizerLoading,
     isCommentModalVisible,
     comment,
     actionType,
-    responseDataEvent,
-    responseMessageEvent,
   } = useSelector((state) => state.organizerUpdates);
   const { selectedTax } = useSelector((state) => state.tax);
   const { selectedVenueList } = useSelector((state) => state.locations);
-  const { ticketTypes, availableSeats, availableTicketTyps } = useSelector(
-    (state) => state.tickets
-  );
+  const { ticketTypes, availableSeats } = useSelector((state) => state.tickets);
 
   const completedSectionsSet = new Set(completedSections);
 
@@ -245,13 +238,6 @@ export default function EventForm({ eventId, mode = "add", isMakeChange }) {
       dispatch(fetchEventDetails(eventId));
     }
   }, [dispatch, eventId, mode]);
-
-  const safeGetFileName = (url) => {
-    if (!url || typeof url !== "string") {
-      return "image";
-    }
-    return url.split("/").pop() || "image";
-  };
 
   useEffect(() => {
     if (
@@ -826,26 +812,10 @@ export default function EventForm({ eventId, mode = "add", isMakeChange }) {
           ?.id,
       };
 
-      const pageData = {
-        event_id: eventId,
-      };
-
-      console.log("Make Change Data:", completeFormData);
-
-      const resultAction = await dispatch(
-        makeChangeEvent({
-          data: completeFormData,
-          action: ActionType.SUBMIT, // Or use ActionType.SUBMIT
-          pageData,
-        })
-      );
-
-      if (makeChangeEvent.fulfilled.match(resultAction)) {
-        dispatch(setComment(""));
-        dispatch(setCommentModalVisibility(false));
-        dispatch(setSelectedSubmitItem(completeFormData));
-        message.success(`Update ${actionType}ed successfully`);
-      }
+      dispatch(setComment(""));
+      dispatch(setCommentModalVisibility(false));
+      dispatch(setSelectedSubmitItem(completeFormData));
+      message.success(`Update ${actionType}ed successfully`);
     } catch (error) {
       console.error("Failed to submit change:", error);
       message.error(`Failed to ${actionType} the update`);
@@ -1188,11 +1158,20 @@ export default function EventForm({ eventId, mode = "add", isMakeChange }) {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === EDIT ? editEvent : addEvent}
+        addFunction={
+          mode === EDIT
+            ? isMakeChange
+              ? makeChangeEvent
+              : editEvent
+            : addEvent
+        }
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
         responseMessage={responseMessage}
         mode={mode}
         form={form}
+        additionalParams={{
+          event_id: eventId,
+        }}
         formType="event"
         setIsUploading={setIsUploading}
         extraFieldsFromResponse={[

@@ -41,7 +41,7 @@ OfferService.editOffer = function (data, action, pageData) {
     ApiConstant.OFFER_URL,
     ApiConstant.ORGANIZER_OFFER_URL,
     isOrganizer()
-  );
+  ); 
   const offerUrl = isOrganizer()
     ? `${offerUrlBase}?action=${encodedAction}`
     : `${offerUrlBase}/${data.id}?action=${encodedAction}`;
@@ -74,7 +74,7 @@ OfferService.makeChangeOffer = function (data, action, pageData) {
       action: handleAction(encodedAction),
       ...Utils.filterParams(pageData),
     },
-  });
+  }); 
 };
 
 // OfferService.editOfferStatus = function (

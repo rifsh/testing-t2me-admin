@@ -69,19 +69,7 @@ CouponService.editCoupon = function (
   });
 };
 
-CouponService.makeChangeCoupon = function (data, action, pageData) {
-  const encodedAction = encodeURIComponent(handleAction(action));
-  return fetch({
-    url: ApiConstant.ORGANIZER_COUPON_MAKE_CHANGES_URL,
-    method: "put",
-    data: data,
-    params: {
-      action: handleAction(encodedAction),
-      coupon_id: data.id,
 
-    },
-  });
-};
 
 CouponService.editCouponStatus = function (
   data,

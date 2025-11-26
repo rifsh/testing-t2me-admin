@@ -19,9 +19,10 @@ const { Option } = Select;
 const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { type } = useParams(); 
-  const { filteredOffers, pagination, loading } = useSelector(
-    (state) => state.offers
+  const { type } = useParams();
+
+  const { allSeats, pagination, loading } = useSelector(
+    (state) => state.movieSeatSlice
   );
   const [activeStatus, setactiveStatus] = useState();
   const handlePagination = usePaginationHook(fetchAllOffers);
@@ -32,16 +33,13 @@ const OrganizerOfferStatusList = () => {
         ...DEFAULT_PAGE_SIZE,
         organizer: true,
         isOrganizer: true,
-        event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
   }, [dispatch]);
 
- 
-
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track/offer/status/details/${id}/${type}`);
+    navigate(`${APP_PREFIX_PATH}/track/seat/status/details/${id}/${type}`);
   };
 
   const handleShowStatus = (status) => {
@@ -96,10 +94,10 @@ const OrganizerOfferStatusList = () => {
           text?.toLowerCase() === "approved"
             ? "green"
             : text?.toLowerCase() === "rejected"
-              ? "red"
-              : text?.toLowerCase() === "update"
-                ? "blue"
-                : "orange";
+            ? "red"
+            : text?.toLowerCase() === "update"
+            ? "blue"
+            : "orange";
 
         return (
           <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>
@@ -129,11 +127,10 @@ const OrganizerOfferStatusList = () => {
           isStatus={false}
           isOrganizer={true}
           additionalParams={{
-            event_code: Utils.getEventTypeCodeWithType(type)
+            event_code: Utils.getEventTypeCodeWithType(type),
           }}
           additionalFilters={[]}
         />
-
 
         <div className="mb-3">
           <Select
@@ -153,7 +150,7 @@ const OrganizerOfferStatusList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredOffers}
+          dataSource={allSeats}
           rowKey="id"
           loading={loading}
           pagination={{
