@@ -3,27 +3,27 @@ import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { configureStore } from "@reduxjs/toolkit";
-import mockData from "../../../../test/mock/auth/login.mock.json";
+import mockData from "../../mock/auth/login.mock.json";
 
-import { LoginForm } from "./LoginForm"; // Import named export
-import authReducer from "../../../store/slices/authSlice";
-import locationReducer from "../../../store/slices/locationSlice";
-import { TENANT_SCHEMA } from "constants/AuthConstant";
+import { LoginForm } from "../../../src/views/auth-views/components/LoginForm"; // Import named export
+import authReducer from "../../../src/store/slices/authSlice";
+import locationReducer from "../../../src/store/slices/locationSlice";
+import { TENANT_SCHEMA } from "../../../src/constants/AuthConstant";
 
 // Mock the modules that import global store
-jest.mock("../../../services/AuthService", () => ({
+jest.mock("../../../src/services/AuthService", () => ({
     __esModule: true,
     default: {},
 }));
 
-jest.mock("./../../../auth/FetchInterceptor", () => ({
+jest.mock("../../../src/auth/FetchInterceptor", () => ({
     __esModule: true,
     default: {},
 }));
 
 // Mock the getUserdata action
-jest.mock("../../../store/slices/authSlice", () => {
-    const actual = jest.requireActual("../../../store/slices/authSlice");
+jest.mock("../../../src/store/slices/authSlice", () => {
+    const actual = jest.requireActual("../../../src/store/slices/authSlice");
     return {
         ...actual,
         getUserdata: jest.fn(() => ({ type: "auth/getUserdata" })),

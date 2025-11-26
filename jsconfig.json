@@ -2,5 +2,5 @@
   "compilerOptions": {
     "baseUrl": "src"
   },
-  "include": ["src"]
+  "include": ["src", "test/store/slices/authSlice.test.js", "test/store/slices/themeSlice.test.js"]
 }

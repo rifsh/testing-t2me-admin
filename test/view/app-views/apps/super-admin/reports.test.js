@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import { message } from 'antd';
-import mockData from '../../../../../../test/mock/app-views/app/super-admin/reports/index.mock.json';
+import mockData from '../../../../mock/app-views/app/super-admin/reports/index.mock.json';
 
 // CRITICAL: Mock axios FIRST before any other imports that use it
 jest.mock('axios', () => ({
@@ -96,7 +96,7 @@ jest.mock('utils/hooks/usePaginationHandler', () => ({
 }));
 
 // Now import the components after all mocks are set up
-import SuperAdminReport from './index';
+import SuperAdminReport from '../../../../../src/views/app-views/apps/super-admin/reports/index';
 import reportReducer from 'store/slices/reportSlice';
 import * as exportUtils from 'utils/exportUtils';
 
@@ -254,7 +254,7 @@ describe('SuperAdminReport Component', () => {
                 // Use getAllByText since there are multiple elements with "Movie Organizers"
                 const movieOrganizerElements = screen.getAllByText(/Movie Organizers/i);
                 expect(movieOrganizerElements.length).toBeGreaterThan(0);
-                
+
                 const totalMoviesElements = screen.getAllByText(/Total Movies/i);
                 expect(totalMoviesElements.length).toBeGreaterThan(0);
             }, { timeout: 3000 });

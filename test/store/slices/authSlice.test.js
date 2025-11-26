@@ -13,12 +13,12 @@ import authReducer, {
     signInWithFacebook,
     showAuthMessage,
     hideAuthMessage,
-} from "../slices/authSlice";
+} from "../../../src/store/slices/authSlice";
 
-import { createTestStore, testAsyncThunk } from "../../../test/utils/reduxTestHelper";
+import { createTestStore, testAsyncThunk } from "../../utils/reduxTestHelper";
 import AuthService from "services/AuthService";
 import UserService from "services/userService";
-import mockData from "../../../test/mock/auth/login.mock.json";
+import mockData from "../../mock/auth/login.mock.json";
 import { jwtDecode } from "jwt-decode";
 
 jest.mock("services/AuthService");
