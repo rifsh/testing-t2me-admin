@@ -1,0 +1,65 @@
+{
+    "annualStats": {
+        "events": [
+            {
+                "title1": "Total Events",
+                "value1": 150,
+                "title2": "Active Events",
+                "value2": 120
+            },
+            {
+                "title1": "Upcoming",
+                "value1": 30,
+                "title2": "Completed",
+                "value2": 90
+            },
+            {
+                "title1": "Canceled",
+                "value1": 10,
+                "title2": "Drafts",
+                "value2": 10
+            }
+        ]
+    },
+    "users": [
+        {
+            "id": 1,
+            "name": "Alice Smith",
+            "title": "Project Manager",
+            "role": "Admin",
+            "img": "avatar1.jpg"
+        },
+        {
+            "id": 2,
+            "name": "Bob Johnson",
+            "title": "Software Engineer",
+            "role": "User",
+            "img": "avatar2.jpg"
+        }
+    ],
+    "schedules": [
+        {
+            "id": 101,
+            "schedule_name": "Workshop 1",
+            "event_name": "Tech Summit",
+            "start_date": "2025-10-01",
+            "end_date": "2025-10-02",
+            "status": "Active",
+            "avatarColor": "#00bfa5"
+        },
+        {
+            "id": 102,
+            "schedule_name": "Morning Brief",
+            "event_name": "Daily Sync",
+            "start_date": "2025-11-20",
+            "end_date": "2025-11-20",
+            "status": "Inactive",
+            "avatarColor": "#f9a825"
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "size": 10,
+        "total": 35
+    }
+}

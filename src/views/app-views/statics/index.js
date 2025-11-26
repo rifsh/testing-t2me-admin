@@ -139,8 +139,8 @@ const tableColumns = [
             record.status === "Active"
               ? "cyan"
               : record.status === "Inactive"
-              ? "blue"
-              : "volcano"
+                ? "blue"
+                : "volcano"
           }
         >
           {record.status}
@@ -159,7 +159,7 @@ export const StaticsDashboard = () => {
     annualStatsForUsers,
     annualStatsForSchedules,
     loading,
-    loadingMembers,pagination,
+    loadingMembers, pagination,
     loadingSchedules,
   } = useSelector((state) => state.statics);
 
@@ -168,7 +168,7 @@ export const StaticsDashboard = () => {
   };
   useEffect(() => {
     dispatch(fetchAnnualStatsforEvents());
-    dispatch(fetchUserStatsForUsers({size:10,page:1})); 
+    dispatch(fetchUserStatsForUsers({ size: 10, page: 1 }));
     dispatch(fetchUserStatsForSchedules());
   }, [dispatch]);
 
@@ -181,7 +181,7 @@ export const StaticsDashboard = () => {
               // Show 3 spinner items when loading
               [1, 2, 3].map((i) => (
                 <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
-                  <AnnualStatistic value2={<Spin size="small" />} />
+                  <AnnualStatistic value2={<Spin data-testid="loading-spin" size="small" />} />
                 </Col>
               ))
             ) : Array.isArray(annualStatsForEvents) &&
@@ -212,7 +212,7 @@ export const StaticsDashboard = () => {
               title="Member's Data"
               extra={<CardDropdown items={newJoinMemberOptions} />}
             >
-              <Spin size="large" />
+              <Spin data-testid="loading-spin" size="large" />
             </Card>
           </Col>
         ) : (
@@ -225,7 +225,7 @@ export const StaticsDashboard = () => {
               title="Member's Data">
               <div className="mt-3">
                 {Array.isArray(annualStatsForUsers) &&
-                annualStatsForUsers.length > 0 ? (
+                  annualStatsForUsers.length > 0 ? (
                   <Table
                     className="no-border-last"
                     columns={[
@@ -247,6 +247,7 @@ export const StaticsDashboard = () => {
                         key: "actions",
                         render: (_, record) => (
                           <Button
+                            data-testid="add-user-row-btn"
                             icon={<UserAddOutlined />}
                             type="default"
                             size="small"
@@ -281,7 +282,7 @@ export const StaticsDashboard = () => {
               title="Latest Schedules"
               extra={<CardDropdown items={latestTransactionOption} />}
             >
-              <Spin size="large" />
+              <Spin data-testid="loading-spin" size="large" />
             </Card>
           </Col>
         ) : (
@@ -291,7 +292,7 @@ export const StaticsDashboard = () => {
               extra={<CardDropdown items={latestTransactionOption} />}
             >
               {Array.isArray(annualStatsForSchedules) &&
-              annualStatsForSchedules.length > 0 ? (
+                annualStatsForSchedules.length > 0 ? (
                 <Table
                   className="no-border-last"
                   columns={tableColumns}
