@@ -168,9 +168,9 @@ const ScheduleList = () => {
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
-        {hasPermission(
+        {/* {hasPermission(
           PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES
-        ) && (
+        ) && ( */}
             <Button
               type="primary"
               icon={<FormOutlined />}
@@ -178,7 +178,7 @@ const ScheduleList = () => {
             >
               Add Schedule (New)
             </Button>
-          )}
+          {/* )} */}
         {hasPermission(
           PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES
         ) && (

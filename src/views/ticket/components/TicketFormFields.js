@@ -54,8 +54,9 @@ import {
 import { isOrganizer } from "configs/UserAccessConfig"; // ✅ Add this
 import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil"; // ✅ Add this
 import { ActionType } from "utils/api/warning-submit-util";
+import EventAndTheaterChooser from "components/util-components/FormItems/EventAndTheaterChooser";
 
-const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
+const TicketFormFields = ({ mode, ticketId, isMakeChange, type }) => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -352,6 +353,7 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
       const isDynamic = values.ticket_type === "dynamic";
 
       const ticketData = {
+        event_ids: values.event_ids,
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
         base_price: values.type_price,
@@ -437,26 +439,10 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
         ],
       };
 
-      const pageData = {
-        ticket_id: ticketId,
-      };
-
-      console.log("Make Change Data:", ticketData);
-
-      const resultAction = await dispatch(
-        makeChangeTicket({
-          data: ticketData,
-          action: ActionType.SUBMIT, // Or use ActionType.SUBMIT
-          pageData,
-        })
-      );
-
-      if (makeChangeTicket.fulfilled.match(resultAction)) {
-        dispatch(setComment(""));
-        dispatch(setCommentModalVisibility(false));
-        dispatch(setSelectedSubmitItem(ticketData));
-        message.success(`Update ${actionType}ed successfully`);
-      }
+      dispatch(setComment(""));
+      dispatch(setCommentModalVisibility(false));
+      dispatch(setSelectedSubmitItem(ticketData));
+      message.success(`Update ${actionType}ed successfully`);
     } catch (error) {
       console.error("Failed to submit change:", error);
       message.error(`Failed to ${actionType} the update`);
@@ -495,6 +481,7 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
         key={`ticket-form-${JSON.stringify(allFormData)}`}
       >
         <Card title="Ticket Form">
+          <EventAndTheaterChooser type={type} form={form} />
           <PlaceWithCountryForm
             form={form}
             label={"Place"}
@@ -678,6 +665,9 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
         }
         navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
         responseMessage={responseMessage}
+        additionalParams={{
+          ticket_id: ticketId,
+        }}
         mode={mode}
         form={form}
         formType={"ticket"}

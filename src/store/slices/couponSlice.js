@@ -106,22 +106,6 @@ export const editCoupon = createAsyncThunk(
     }
   }
 );
-export const makeChangesCoupon = createAsyncThunk(
-  "coupon/makeChangesCoupon",
-  async ({ data, action, pageData }, { rejectWithValue }) => {
-    try {
-      console.log(pageData, "DATA IN SERVICE");
-      const response = await CouponService.makeChangeCoupon(
-        data,
-        action,
-        pageData
-      );
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to edit event");
-    }
-  }
-);
 
 export const editCouponStatus = createAsyncThunk(
   "coupon/editStatus",
@@ -223,27 +207,7 @@ const couponSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(makeChangesCoupon.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(makeChangesCoupon.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.responseData = payload.data;
-        if (payload.data?.list_of_updated_Schedules) {
-          state.submitPagination = payload.data?.list_of_updated_Schedules;
-        }
-        if (payload.status) {
-          state.message = payload.status.message;
-          state.responseImpactData = payload.status.data?.active_schedules;
-          state.editable_status = payload.status?.editable_status;
-          state.warningPagination = payload.status?.data?.active_schedules;
-        }
-      })
-      .addCase(makeChangesCoupon.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-        console.log("action.payload", action.payload);
-      })
+
       .addCase(editCouponStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -314,10 +278,12 @@ const couponSlice = createSlice({
         state.couponCodeLoading = false;
         if (action.payload.status?.status_code === SUCCESS_CODE) {
           state.generatedCouponCodes = action.payload.data?.coupon_codes;
-          message.success('Coupon codes Generated successfully');
+          message.success("Coupon codes Generated successfully");
           return;
         } else {
-          message.success(action.payload.status?.message || 'Error generating coupon codes');
+          message.success(
+            action.payload.status?.message || "Error generating coupon codes"
+          );
         }
         state.error = null;
       })

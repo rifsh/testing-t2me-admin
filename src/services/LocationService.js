@@ -80,22 +80,7 @@ LocationService.editPlace = function (
     // },
   });
 };
-LocationService.makeChangeVenue = function (data, action, pageData) {
-  const encodedAction = encodeURIComponent(handleAction(action));
 
-  const url = ApiConstant.ORGANIZER_VENUE_MAKE_CHANGES_URL;
-  const params = {
-    action: encodedAction,
-    ...Utils.filterParams(pageData),
-  };
-
-  return fetch({
-    url: `${url}`,
-    method: "put",
-    data: data,
-    params: params,
-  });
-};
 LocationService.editPlaceStatus = function (
   data,
   action,

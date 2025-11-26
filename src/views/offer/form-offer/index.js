@@ -11,7 +11,6 @@ import {
   setSelectedOffer,
   setOfferDialogVisible,
   setOfferModalLoading,
-  makeChangeOffer,
 } from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
@@ -29,6 +28,7 @@ import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 import {
+  makeChangeOffer,
   setComment,
   setCommentModalVisibility,
 } from "store/slices/EventOrganizerSlice";
@@ -62,6 +62,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     actionType,
     responseDataEvent,
     responseMessageEvent,
+    organizerUpdateResponseData,
   } = useSelector((state) => state.organizerUpdates);
 
   const [form] = Form.useForm();
@@ -301,28 +302,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
       },
     };
 
-    const pageData = {
-      offer_id: offer.id,
-    };
     try {
-      const resultAction = await dispatch(
-        makeChangeOffer({
-          data: editData,
-          action: ActionType.SUBMIT,
-          pageData,
-        })
-      );
-
-      if (makeChangeOffer.fulfilled.match(resultAction)) {
-        dispatch(setComment(""));
-        console.warn("first compelted");
-        // dispatch(setSelectedCoupon(editData));
-        dispatch(setCommentModalVisibility(false));
-        dispatch(setSelectedSubmitItem(editData));
-        message.success(`Update ${actionType}ed successfully`);
-        // navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
-      }
-
+      dispatch(setComment(""));
+      dispatch(setCommentModalVisibility(false));
       dispatch(setSelectedSubmitItem(editData));
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
@@ -410,7 +392,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
 
       {/* ✅ Added setIsUploading and uploadFieldConfigs */}
       <SubmitAndConfirmModal
-        responseData={responseData}
+        responseData={responseData || organizerUpdateResponseData}
         addFunction={
           mode === EDIT
             ? isMakeChange
@@ -423,6 +405,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         pagination={submitPagination}
         mode={mode}
         form={form}
+        additionalParams={{
+          offer_id: offer?.id,
+        }}
         formType={"offer"}
         setIsUploading={setIsUploading}
         uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.OFFER}

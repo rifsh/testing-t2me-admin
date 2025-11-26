@@ -23,7 +23,6 @@ import {
   setPlaceValidationDialogVisible,
   setLocationModalLoading,
   validatePlace,
-  makeChangeVenue,
 } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
@@ -53,6 +52,7 @@ import { UPLOAD_FIELD_CONFIGS, extractFileObjects } from "utils/s3UploadUtil";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 import ResizedMediaPicker from "components/util-components/Image/ResizedImgePicker";
 import {
+  makeChangeVenue,
   setComment,
   setCommentModalVisibility,
 } from "store/slices/EventOrganizerSlice";
@@ -94,6 +94,7 @@ const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
     comment,
     actionType,
     loading: organizerLoading,
+    organizerUpdateResponseData,
   } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
@@ -345,30 +346,10 @@ const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
         comment,
       };
 
-      const pageData = { venue_id: venue.id };
-
-      console.log("Make Change Data:", editData);
-
-      // ✅ EXACTLY LIKE TICKET: Just dispatch and let SubmitAndConfirmModal handle it
-      const resultAction = await dispatch(
-        makeChangeVenue({
-          data: editData,
-          action: ActionType.SUBMIT,
-          pageData,
-        })
-      );
-
-      // ✅ EXACTLY LIKE TICKET: If successful, dispatch setSelectedSubmitItem
-      if (makeChangeVenue.fulfilled.match(resultAction)) {
-        dispatch(setComment(""));
-        dispatch(setCommentModalVisibility(false));
-        dispatch(setSelectedSubmitItem(editData)); // ← This triggers SubmitAndConfirmModal
-        message.success(`Update ${actionType}ed successfully`);
-      } else {
-        message.error("Failed to submit venue changes");
-        dispatch(setComment(""));
-        dispatch(setCommentModalVisibility(false));
-      }
+      dispatch(setComment(""));
+      dispatch(setCommentModalVisibility(false));
+      dispatch(setSelectedSubmitItem(editData));
+      message.success(`Update ${actionType}ed successfully`);
     } catch (error) {
       console.error("Failed to submit change:", error);
       message.error("Failed to submit venue changes");
@@ -723,11 +704,11 @@ const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
       />
       <LoadingOverlay loading={loading || isUploading} />
       <SubmitAndConfirmModal
-        responseData={responseData}
+        responseData={responseData || organizerUpdateResponseData}
         addFunction={
           mode === "EDIT"
             ? isMakeChanges
-              ? makeChangeVenue 
+              ? makeChangeVenue
               : editVenue
             : addVenue
         }
@@ -735,6 +716,9 @@ const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
         responseMessage={responseMessage}
         mode={mode}
         form={form}
+        additionalParams={{
+          venue_id: venue?.id,
+        }}
         formType={"venue"}
         setIsUploading={setIsUploading}
         uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.VENUE}

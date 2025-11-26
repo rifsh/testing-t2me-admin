@@ -32,6 +32,7 @@ export const SubmitAndConfirmModal = ({
   fieldsToConfirm = [],
   extraFieldsFromResponse = [], // NEW PROP: Fields to extract from submit response
   uploadFieldConfigs = [],
+  additionalParams = {},
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -98,7 +99,13 @@ export const SubmitAndConfirmModal = ({
       console.log("=== ORIGINAL DATA STORED ===", originalDataRef.current);
 
       // Call submit with ORIGINAL data
-      dispatch(addFunction({ data: clonedData, action: ActionType.SUBMIT }))
+      dispatch(
+        addFunction({
+          data: clonedData,
+          action: ActionType.SUBMIT,
+          pageData: additionalParams,
+        })
+      )
         .then((result) => {
           if (addFunction.fulfilled?.match(result)) {
             // ===== STORE SUBMIT RESPONSE for extracting extra fields =====
@@ -135,7 +142,7 @@ export const SubmitAndConfirmModal = ({
         addFunction({
           data: originalDataRef.current,
           action: ActionType.SUBMIT,
-          pageData: { page: page, size: size },
+          pageData: { page: page, size: size, ...additionalParams },
         })
       );
     }
@@ -279,7 +286,7 @@ export const SubmitAndConfirmModal = ({
       ) {
         // Navigate through response data structure
         let responseDataObj =
-          submitResponse?.data?.data || submitResponse?.data || submitResponse;
+          submitResponse?.data?.data|| submitResponse?.data || submitResponse;
 
         console.log("=== EXTRACTING EXTRA FIELDS FROM RESPONSE ===", {
           responseDataObj,
@@ -303,7 +310,11 @@ export const SubmitAndConfirmModal = ({
 
       // Send confirmation request
       const resultAction = await dispatch(
-        addFunction({ data: confirmationData, action: ActionType.CONFIRM })
+        addFunction({
+          data: confirmationData,
+          action: ActionType.CONFIRM,
+          pageData: additionalParams,
+        })
       );
 
       if (addFunction.fulfilled.match(resultAction)) {

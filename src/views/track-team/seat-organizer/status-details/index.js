@@ -29,7 +29,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import {
-  fetchOrganizerSingleOfferUpdate,
+  fetchOrganizerSingleSeatUpdate,
   submitOrganizerOfferUpdate,
   setCommentModalVisibility,
   setActionType,
@@ -42,7 +42,7 @@ import StatusTimelineCard from "components/layout-components/Cards/StatusTimelin
 const { Title, Text, Paragraph } = Typography;
 
 const OrganizerOfferDetail = () => {
-  const { offerId ,type} = useParams();
+  const { seatId, type } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
@@ -56,10 +56,10 @@ const OrganizerOfferDetail = () => {
   } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
-    if (offerId) {
-      dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
+    if (seatId) {
+      dispatch(fetchOrganizerSingleSeatUpdate({ seat_id: seatId }));
     }
-  }, [dispatch, offerId]);
+  }, [dispatch, seatId]);
 
   const handleOpenModal = (action) => {
     dispatch(setActionType(action));
@@ -67,11 +67,9 @@ const OrganizerOfferDetail = () => {
   };
 
   const handleMakeChanges = () => {
-
-      navigate(
-        `${APP_PREFIX_PATH}/offer/edit/${offerId}/${type}?isMakeChange=${true}`
-      );
-  
+    navigate(
+      `${APP_PREFIX_PATH}/seat/event/edit/${seatId}?isMakeChange=${true}`
+    );
   };
 
   const getApprovalStatus = (action) => {
@@ -95,7 +93,7 @@ const OrganizerOfferDetail = () => {
 
     try {
       const data = {
-        offer_id: offerId,
+        seat_id: seatId,
         status: getApprovalStatus(actionType),
         comment: comment,
       };
@@ -103,14 +101,14 @@ const OrganizerOfferDetail = () => {
       const resultAction = await dispatch(
         submitOrganizerOfferUpdate({
           data: data,
-          params: { offer_id: offerId },
+          params: { seat_id: seatId },
           action: ActionType.WARNING,
         })
       );
 
       if (submitOrganizerOfferUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
-        dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
+        dispatch(fetchOrganizerSingleSeatUpdate({ seat_id: seatId }));
         navigate(`${APP_PREFIX_PATH}/track/offer/status/list/movie`);
       }
     } catch (error) {
@@ -325,112 +323,59 @@ const OrganizerOfferDetail = () => {
         </Row>
       </Card>
       <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Offer Details</Title>
+        <Title level={4}>Seat Structure Details</Title>
+
         <Row gutter={[24, 24]}>
           <Col xs={24} md={8}>
-            <Space>
-              <PercentageOutlined />
-              <Text type="secondary">Discount Type</Text>
-            </Space>
+            <Text type="secondary">Seat Structure Name</Text>
+            <div>
+              <Text strong>{singleOrganizerUpdate?.name || "N/A"}</Text>
+            </div>
+          </Col>
+
+          <Col xs={24} md={8}>
+            <Text type="secondary">Venue</Text>
+            <div>
+              <Text strong>{singleOrganizerUpdate?.venue?.name || "N/A"}</Text>
+            </div>
+          </Col>
+
+          <Col xs={24} md={8}>
+            <Text type="secondary">Place</Text>
             <div>
               <Text strong>
-                {singleOrganizerUpdate?.is_percentage
-                  ? "Percentage"
-                  : "Fixed Amount"}
+                {singleOrganizerUpdate?.venue?.place?.name || "N/A"}
               </Text>
             </div>
           </Col>
+
           <Col xs={24} md={8}>
-            <Space>
-              <PercentageOutlined />
-              <Text type="secondary">Discount Value</Text>
-            </Space>
+            <Text type="secondary">Country</Text>
             <div>
               <Text strong>
-                {singleOrganizerUpdate?.discount_percentage_amount || 0}
-                {singleOrganizerUpdate?.is_percentage ? "%" : " units"}
+                {singleOrganizerUpdate?.venue?.place?.country?.name || "N/A"}
               </Text>
             </div>
           </Col>
+
           <Col xs={24} md={8}>
-            <Space>
-              <TagOutlined />
-              <Text type="secondary">Offer Type</Text>
-            </Space>
+            <Text type="secondary">Total Rows</Text>
             <div>
-              <Text strong>
-                {singleOrganizerUpdate?.is_general
-                  ? "General Offer"
-                  : "Specific Offer"}
-              </Text>
+              <Text strong>{singleOrganizerUpdate?.total_row || 0}</Text>
             </div>
           </Col>
+
           <Col xs={24} md={8}>
-            <Space>
-              <ShopOutlined />
-              <Text type="secondary">Redemption Type</Text>
-            </Space>
+            <Text type="secondary">Total Columns</Text>
             <div>
-              <Text strong>
-                {singleOrganizerUpdate?.is_offline ? "Offline" : "Online"}
-              </Text>
+              <Text strong>{singleOrganizerUpdate?.total_column || 0}</Text>
             </div>
           </Col>
+
           <Col xs={24} md={8}>
-            <Space>
-              <UserOutlined />
-              <Text type="secondary">Maximum Uses</Text>
-            </Space>
+            <Text type="secondary">Total Seats</Text>
             <div>
-              <Text strong>
-                {singleOrganizerUpdate?.max_uses || "Unlimited"}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <UserOutlined />
-              <Text type="secondary">Used Count</Text>
-            </Space>
-            <div>
-              <Text strong>{singleOrganizerUpdate?.used_count || 0}</Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <CalendarOutlined />
-              <Text type="secondary">Date Required</Text>
-            </Space>
-            <div>
-              <Text strong>
-                {singleOrganizerUpdate?.date_required ? "Yes" : "No"}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <CalendarOutlined />
-              <Text type="secondary">Start Date</Text>
-            </Space>
-            <div>
-              <Text strong>
-                {singleOrganizerUpdate?.start_date
-                  ? formatDate(singleOrganizerUpdate.start_date)
-                  : "Not specified"}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <CalendarOutlined />
-              <Text type="secondary">End Date</Text>
-            </Space>
-            <div>
-              <Text strong>
-                {singleOrganizerUpdate?.end_date
-                  ? formatDate(singleOrganizerUpdate.end_date)
-                  : "Not specified"}
-              </Text>
+              <Text strong>{singleOrganizerUpdate?.total_seats || 0}</Text>
             </div>
           </Col>
         </Row>
@@ -483,8 +428,9 @@ const OrganizerOfferDetail = () => {
         loading={loading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
-          } Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
 

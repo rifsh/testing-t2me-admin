@@ -169,22 +169,7 @@ export const getVenues = createAsyncThunk(
     }
   }
 );
-export const makeChangeVenue = createAsyncThunk(
-  "Venue/makeChangeVenue",
-  async ({ data, action, pageData }, { rejectWithValue }) => {
-    try {
-      console.log(data, "DATA IN SERVICE");
-      const response = await LocationService.makeChangeVenue(
-        data,
-        action,
-        pageData
-      );
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to edit event");
-    }
-  }
-);
+
 export const getSingleVenues = createAsyncThunk(
   "locations/getSingleVenues",
   async (venue_id, { rejectWithValue }) => {
@@ -631,25 +616,7 @@ const locationSlice = createSlice({
       })
       // In locationSlice.js extraReducers builder, add:
 
-      .addCase(makeChangeVenue.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(makeChangeVenue.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.responseData = payload.data;
-
-        if (payload.status) {
-          state.message = payload.status.message;
-          state.responseImpactData = payload.status.data?.active_schedules;
-          state.editable_status = payload.status?.editable_status;
-          state.warningPagination = payload.status?.data?.active_schedules;
-        }
-      })
-      .addCase(makeChangeVenue.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload || "Failed to make changes to venue";
-      })
+      
       .addCase(fetchPlaceWithCountry.pending, (state) => {
         state.loading = true;
       })

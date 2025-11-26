@@ -29,12 +29,19 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
 import { nestedToFlat } from "utils/seatUtils";
+import {
+  makeChangeSeat,
+  setComment,
+  setCommentModalVisibility,
+} from "store/slices/EventOrganizerSlice";
+import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
 
 const SeatForm = (props) => {
-  const { mode = ADD, seatId } = props;
+  const { mode = ADD, seatId, isMakeChange } = props;
   const dispatch = useDispatch();
 
   const [form] = Form.useForm();
@@ -59,7 +66,12 @@ const SeatForm = (props) => {
     seatDialogVisible,
     editable_status,
   } = useSelector((state) => state.movieSeatSlice);
-
+  const {
+    loading: organizerLoading,
+    isCommentModalVisible,
+    comment,
+    actionType,
+  } = useSelector((state) => state.organizerUpdates);
   useEffect(() => {
     if (seatId && mode === EDIT) {
       dispatch(getEventSeatStructureDetails({ seat_id: seatId }));
@@ -120,6 +132,10 @@ const SeatForm = (props) => {
       setSubmitLoading(true);
 
       if (mode === EDIT) {
+        if (isOrganizer() && isMakeChange) {
+          dispatch(setCommentModalVisibility(true));
+          return;
+        }
         let totalVisibleSeats = 0;
         seats.forEach((row) => {
           row.forEach((seat) => {
@@ -215,6 +231,46 @@ const SeatForm = (props) => {
   const handleModalCancel = () => {
     dispatch(setSeatDialogVisible(false));
   };
+  const handleCommentSubmit = async () => {
+    if (comment.trim().length === 0) {
+      message.error("Please add a comment!");
+      return;
+    }
+
+    try {
+        const formValues = await form.validateFields();
+      let totalVisibleSeats = 0;
+        seats.forEach((row) => {
+          row.forEach((seat) => {
+            if (seat.isVisible) {
+              totalVisibleSeats++;
+            }
+          });
+        });
+
+        const editData = {
+          ...formValues,
+          id: singleSeatStructure.id,
+          total_row: seats.length,
+          total_column: seats[0]?.length || 0,
+          total_seats: totalVisibleSeats,
+          seat_data: {
+            seats: nestedToFlat(seats),
+            seatTypes: usedSeatTypes,
+          },
+        };
+      dispatch(setComment(""));
+      dispatch(setCommentModalVisibility(false));
+      dispatch(setSelectedSubmitItem(editData));
+      message.success(`Update ${actionType}ed successfully`);
+    } catch (error) {
+      console.error("Failed to submit change:", error);
+      message.error(`Failed to ${actionType} the update`);
+    }
+
+    dispatch(setComment(""));
+    dispatch(setCommentModalVisibility(false));
+  };
 
   return (
     <>
@@ -287,10 +343,27 @@ const SeatForm = (props) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
+      ;
+      <CommentShowModal
+        visible={isCommentModalVisible}
+        onSubmit={handleCommentSubmit}
+        onCancel={() => dispatch(setCommentModalVisibility(false))}
+        loading={organizerLoading}
+        comment={comment}
+        setComment={(value) => dispatch(setComment(value))}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
+        warningMessage={`Please provide a reason for the update.`}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={
-          mode === EDIT ? editEventSeatStructure : addEventSeatStructure
+          mode === EDIT
+            ? isMakeChange
+              ? makeChangeSeat
+              : editEventSeatStructure
+            : addEventSeatStructure
         }
         navigationPath={`${APP_PREFIX_PATH}/seat/event/list`}
         responseMessage={responseMessage}

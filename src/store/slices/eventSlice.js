@@ -187,22 +187,7 @@ export const fetchAllEvent = createAsyncThunk(
     }
   }
 );
-export const makeChangeEvent = createAsyncThunk(
-  "offer/makeChangeEvent",
-  async ({ data, action, pageData }, { rejectWithValue }) => {
-    try {
-      console.log(data, "DATA IN SERVICE");
-      const response = await EventService.makeChangeEvent(
-        data,
-        action,
-        pageData
-      );
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to edit event");
-    }
-  }
-);
+
 export const fetchEventType = createAsyncThunk(
   "event/fetchEventType",
   async (pageData, { rejectWithValue }) => {
