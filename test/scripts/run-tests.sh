@@ -6,7 +6,21 @@
 
 set -e  # Exit immediately if a command exits with non-zero status
 
-# Color codes
+# =========================================================
+# CONFIGURATION
+# =========================================================
+# Set your required coverage percentage here (0-100)
+REQUIRED_COVERAGE=2
+
+# You can also set individual thresholds for different metrics
+REQUIRED_STATEMENTS=80
+REQUIRED_BRANCHES=75
+REQUIRED_FUNCTIONS=80
+REQUIRED_LINES=80
+
+# =========================================================
+# COLOR CODES
+# =========================================================
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -16,7 +30,9 @@ MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
 
-# Logging functions
+# =========================================================
+# LOGGING FUNCTIONS
+# =========================================================
 log_header() {
     echo -e "\n${BOLD}${BLUE}=========================================================${NC}"
     echo -e "${BOLD}${BLUE}$1${NC}"
@@ -52,6 +68,52 @@ cleanup() {
 trap cleanup EXIT
 
 # =========================================================
+# PARSE COMMAND LINE ARGUMENTS
+# =========================================================
+FRESH_INSTALL=false
+SKIP_COVERAGE=false
+CUSTOM_COVERAGE=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --fresh)
+            FRESH_INSTALL=true
+            shift
+        ;;
+        --no-coverage)
+            SKIP_COVERAGE=true
+            shift
+        ;;
+        --coverage-threshold)
+            CUSTOM_COVERAGE="$2"
+            shift 2
+        ;;
+        --help)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --fresh                     Force fresh npm install"
+            echo "  --no-coverage              Skip coverage analysis"
+            echo "  --coverage-threshold NUM   Set required coverage percentage (0-100)"
+            echo "  --help                     Show this help message"
+            echo ""
+            echo "Example: $0 --coverage-threshold 85"
+            exit 0
+        ;;
+        *)
+            log_warning "Unknown option: $1"
+            shift
+        ;;
+    esac
+done
+
+# Override coverage threshold if provided via command line
+if [ -n "$CUSTOM_COVERAGE" ]; then
+    REQUIRED_COVERAGE=$CUSTOM_COVERAGE
+    log_info "Using custom coverage threshold: ${YELLOW}${REQUIRED_COVERAGE}%${NC}"
+fi
+
+# =========================================================
 # INITIALIZE
 # =========================================================
 log_header "REACT TEST RUNNER - INITIALIZATION"
@@ -66,6 +128,9 @@ cd "$PROJECT_ROOT" || {
     exit 1
 }
 log_success "Working directory: ${YELLOW}$PROJECT_ROOT${NC}"
+
+# Display configuration
+log_info "Required Coverage Threshold: ${BOLD}${YELLOW}${REQUIRED_COVERAGE}%${NC}"
 
 # =========================================================
 # VALIDATE PROJECT STRUCTURE
@@ -101,11 +166,11 @@ fi
 # =========================================================
 log_header "DEPENDENCY MANAGEMENT"
 
-if [ "$NEEDS_INSTALL" = true ] || [ "$1" = "--fresh" ]; then
+if [ "$NEEDS_INSTALL" = true ] || [ "$FRESH_INSTALL" = true ]; then
     log_step "Installing dependencies (npm ci)..."
     
     # Remove existing node_modules if --fresh flag is used
-    if [ "$1" = "--fresh" ]; then
+    if [ "$FRESH_INSTALL" = true ]; then
         log_warning "Fresh install requested - removing node_modules..."
         rm -rf node_modules package-lock.json
     fi
@@ -132,7 +197,10 @@ log_step "NPM version: $(npm --version)"
 
 # Check for test files
 log_step "Scanning for test files..."
-TEST_FILES=$(find src -name "*.test.js" -o -name "*.test.jsx" -o -name "*.spec.js" -o -name "*.spec.jsx" 2>/dev/null | wc -l)
+TEST_FILES=$(find . \
+    -type d -name node_modules -prune -false -o \
+    \( -name "*.test.js" -o -name "*.test.jsx" -o -name "*.spec.js" -o -name "*.spec.jsx" \) \
+| wc -l)
 if [ "$TEST_FILES" -eq 0 ]; then
     log_warning "No test files found in src directory"
     log_info "Looking for test files in any location..."
@@ -170,12 +238,19 @@ fi
 # =========================================================
 # RUN COVERAGE ANALYSIS (ONLY IF TESTS PASSED)
 # =========================================================
+if [ "$SKIP_COVERAGE" = true ]; then
+    log_header "SKIPPING COVERAGE ANALYSIS"
+    log_info "Coverage analysis skipped (--no-coverage flag used)"
+    log_header "✅ SUCCESS - ALL TESTS PASSED"
+    exit 0
+fi
+
 log_header "COVERAGE ANALYSIS"
 
 log_step "Running tests with coverage..."
 echo ""
 
-CI=true npm test -- --coverage --watchAll=false --verbose --coverageReporters="text" "text-summary" "lcov" "html" 2>&1 | tee /tmp/coverage-output.log
+CI=true npm test -- --coverage --watchAll=false --verbose --coverageReporters="text" "text-summary" "lcov" "html" "json-summary" 2>&1 | tee /tmp/coverage-output.log
 
 COVERAGE_EXIT_CODE=${PIPESTATUS[0]}
 
@@ -203,23 +278,137 @@ if grep -q "All files" /tmp/coverage-output.log; then
 fi
 
 # =========================================================
-# COVERAGE THRESHOLDS CHECK (OPTIONAL)
+# COVERAGE THRESHOLDS CHECK
 # =========================================================
-log_step "Checking coverage thresholds..."
+log_header "COVERAGE THRESHOLD VALIDATION"
 
-# Extract coverage percentages
-COVERAGE_PERCENT=$(grep "All files" /tmp/coverage-output.log | awk '{print $4}' | tr -d '%' || echo "0")
+# Function to extract coverage percentage from JSON
+extract_coverage_from_json() {
+    local metric=$1
+    if [ -f "coverage/coverage-summary.json" ]; then
+        # Try multiple methods to extract coverage
+        local result=$(node -e "const fs=require('fs'); const data=JSON.parse(fs.readFileSync('coverage/coverage-summary.json','utf8')); console.log(data.total['$metric'].pct);" 2>/dev/null || echo "")
+        
+        if [ -z "$result" ]; then
+            # Fallback to python if node fails
+            result=$(python3 -c "import json; data=json.load(open('coverage/coverage-summary.json')); print(data['total']['$metric']['pct'])" 2>/dev/null || echo "")
+        fi
+        
+        if [ -z "$result" ]; then
+            # Final fallback to python2
+            result=$(python -c "import json; data=json.load(open('coverage/coverage-summary.json')); print(data['total']['$metric']['pct'])" 2>/dev/null || echo "")
+        fi
+        
+        echo "${result:-0}"
+    else
+        echo "0"
+    fi
+}
+
+# Try to get coverage from JSON first (most accurate)
+if [ -f "coverage/coverage-summary.json" ]; then
+    log_step "Extracting coverage metrics from JSON report..."
+    
+    STATEMENTS_PCT=$(extract_coverage_from_json "statements")
+    BRANCHES_PCT=$(extract_coverage_from_json "branches")
+    FUNCTIONS_PCT=$(extract_coverage_from_json "functions")
+    LINES_PCT=$(extract_coverage_from_json "lines")
+    
+    log_info "Statements: ${YELLOW}${STATEMENTS_PCT}%${NC}"
+    log_info "Branches:   ${YELLOW}${BRANCHES_PCT}%${NC}"
+    log_info "Functions:  ${YELLOW}${FUNCTIONS_PCT}%${NC}"
+    log_info "Lines:      ${YELLOW}${LINES_PCT}%${NC}"
+    
+    # Use lines coverage as the main metric
+    COVERAGE_PERCENT=$LINES_PCT
+else
+    # Fallback to parsing text output
+    log_step "Extracting coverage from text output..."
+    COVERAGE_PERCENT=$(grep "All files" /tmp/coverage-output.log | awk '{print $10}' | tr -d '%' | head -1 || echo "0")
+    
+    if [ -z "$COVERAGE_PERCENT" ] || [ "$COVERAGE_PERCENT" = "0" ]; then
+        COVERAGE_PERCENT=$(grep "All files" /tmp/coverage-output.log | awk '{print $4}' | tr -d '%' | head -1 || echo "0")
+    fi
+fi
+
+echo ""
+log_step "Validating against required threshold of ${YELLOW}${REQUIRED_COVERAGE}%${NC}..."
+
+# Check if coverage meets threshold
+COVERAGE_CHECK_PASSED=false
 
 if [ -n "$COVERAGE_PERCENT" ] && [ "$COVERAGE_PERCENT" != "0" ]; then
-    if (( $(echo "$COVERAGE_PERCENT >= 80" | bc -l) )); then
-        log_success "Coverage is ${GREEN}${COVERAGE_PERCENT}%${NC} (Above 80% threshold)"
-        elif (( $(echo "$COVERAGE_PERCENT >= 60" | bc -l) )); then
-        log_warning "Coverage is ${YELLOW}${COVERAGE_PERCENT}%${NC} (Consider increasing to 80%)"
+    # Use bc for floating point comparison
+    if command -v bc >/dev/null 2>&1; then
+        if (( $(echo "$COVERAGE_PERCENT >= $REQUIRED_COVERAGE" | bc -l) )); then
+            COVERAGE_CHECK_PASSED=true
+        fi
     else
-        log_warning "Coverage is ${RED}${COVERAGE_PERCENT}%${NC} (Below recommended 60% threshold)"
+        # Fallback to integer comparison if bc is not available
+        COVERAGE_INT=${COVERAGE_PERCENT%.*}
+        if [ "$COVERAGE_INT" -ge "$REQUIRED_COVERAGE" ]; then
+            COVERAGE_CHECK_PASSED=true
+        fi
+    fi
+fi
+
+echo ""
+
+if [ "$COVERAGE_CHECK_PASSED" = true ]; then
+    log_success "Coverage requirement MET: ${GREEN}${COVERAGE_PERCENT}%${NC} >= ${YELLOW}${REQUIRED_COVERAGE}%${NC}"
+    
+    # Additional status messages
+    if (( $(echo "$COVERAGE_PERCENT >= 90" | bc -l 2>/dev/null || echo 0) )); then
+        log_success "Excellent coverage! 🎉"
+        elif (( $(echo "$COVERAGE_PERCENT >= 80" | bc -l 2>/dev/null || echo 0) )); then
+        log_success "Good coverage! 👍"
     fi
 else
-    log_info "Coverage percentage could not be determined"
+    echo ""
+    log_error "Coverage requirement NOT MET!"
+    log_error "Current coverage: ${RED}${COVERAGE_PERCENT}%${NC}"
+    log_error "Required coverage: ${YELLOW}${REQUIRED_COVERAGE}%${NC}"
+    log_error "Shortfall: ${RED}$(echo "$REQUIRED_COVERAGE - $COVERAGE_PERCENT" | bc -l 2>/dev/null || echo "N/A")%${NC}"
+    echo ""
+    log_info "Please add more tests to increase coverage."
+    log_info "View detailed coverage report: ${YELLOW}coverage/lcov-report/index.html${NC}"
+    echo ""
+    log_header "❌ COVERAGE THRESHOLD NOT MET"
+    exit 1
+fi
+
+# =========================================================
+# DETAILED METRIC VALIDATION (OPTIONAL)
+# =========================================================
+if [ -f "coverage/coverage-summary.json" ]; then
+    echo ""
+    log_step "Checking individual metric thresholds..."
+    
+    METRICS_FAILED=false
+    
+    check_metric() {
+        local metric_name=$1
+        local actual=$2
+        local required=$3
+        
+        if (( $(echo "$actual >= $required" | bc -l 2>/dev/null || echo 0) )); then
+            log_success "${metric_name}: ${GREEN}${actual}%${NC} >= ${required}%"
+        else
+            log_warning "${metric_name}: ${YELLOW}${actual}%${NC} < ${required}% (⚠️  Below threshold)"
+            METRICS_FAILED=true
+        fi
+    }
+    
+    check_metric "Statements" "$STATEMENTS_PCT" "$REQUIRED_STATEMENTS"
+    check_metric "Branches  " "$BRANCHES_PCT" "$REQUIRED_BRANCHES"
+    check_metric "Functions " "$FUNCTIONS_PCT" "$REQUIRED_FUNCTIONS"
+    check_metric "Lines     " "$LINES_PCT" "$REQUIRED_LINES"
+    
+    if [ "$METRICS_FAILED" = true ]; then
+        echo ""
+        log_warning "Some individual metrics are below their thresholds (see above)"
+        log_info "Consider improving test coverage for better quality assurance"
+    fi
 fi
 
 # =========================================================
@@ -228,6 +417,7 @@ fi
 log_header "TEST EXECUTION COMPLETE"
 
 log_success "All tests passed with coverage analysis"
+log_success "Coverage threshold requirement met: ${GREEN}${COVERAGE_PERCENT}%${NC} >= ${YELLOW}${REQUIRED_COVERAGE}%${NC}"
 log_info "Total test files: ${YELLOW}$TEST_FILES${NC}"
 log_info "Coverage report: ${YELLOW}$PROJECT_ROOT/coverage/lcov-report/index.html${NC}"
 log_info "Logs saved to: ${YELLOW}/tmp/test-output.log, /tmp/coverage-output.log${NC}"

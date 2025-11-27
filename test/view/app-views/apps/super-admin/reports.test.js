@@ -98,7 +98,7 @@ jest.mock('utils/hooks/usePaginationHandler', () => ({
 // Now import the components after all mocks are set up
 import SuperAdminReport from '../../../../../src/views/app-views/apps/super-admin/reports/index';
 import reportReducer from 'store/slices/reportSlice';
-import * as exportUtils from 'utils/exportUtils';
+import * as exportUtils from '../../../../../src/utils/exportUtils';
 
 // Suppress console errors and warnings for cleaner test output
 const originalError = console.error;

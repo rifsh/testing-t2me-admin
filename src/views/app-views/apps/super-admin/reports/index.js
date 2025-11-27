@@ -144,8 +144,10 @@ const SuperAdminReport = () => {
       setApiLoading((prev) => ({ ...prev, exports: true }));
       await exportToExcel(reportRef, "SuperAdmin-Report.xlsx");
       message.success("Excel exported successfully");
+      return;
     } catch (err) {
       message.error("Failed to export Excel");
+      return;
     } finally {
       setApiLoading((prev) => ({ ...prev, exports: false }));
     }
