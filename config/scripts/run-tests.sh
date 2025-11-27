@@ -10,7 +10,7 @@ set -e  # Exit immediately if a command exits with non-zero status
 # CONFIGURATION
 # =========================================================
 # Set your required coverage percentage here (0-100)
-REQUIRED_COVERAGE=2
+REQUIRED_COVERAGE=4
 
 # You can also set individual thresholds for different metrics
 REQUIRED_STATEMENTS=80

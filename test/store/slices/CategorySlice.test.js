@@ -9,7 +9,7 @@ import reducer, {
     filterCategory,
     setActiveTab,
     clearSubcategories,
-} from "../../../src/store/slices/CategorySlice";
+} from "../../../src/store/slices/categorySlice";
 import mockResponseData from '../../mock/slices/category.mock.json'
 jest.mock("services/CategoryService", () => ({
     fetchCategory: jest.fn(),
