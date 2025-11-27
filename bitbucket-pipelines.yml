@@ -19,7 +19,7 @@ pipelines:
             - npm -v || { echo "Failed to get npm version"; exit 1; }
             
             # Install dependencies
-            - echo "Installing dependencies..."
+            - echo "Installing dependencies...."
             - npm install || { echo "npm install failed"; exit 1; }
             
             # Set coverage threshold (default = 80%)
