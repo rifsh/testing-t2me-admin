@@ -4,7 +4,7 @@ options:
   max-time: 20
 
 pipelines:
-  default:
+  feature/**:
     - step:
         name: React Tests & Coverage
         size: 2x
