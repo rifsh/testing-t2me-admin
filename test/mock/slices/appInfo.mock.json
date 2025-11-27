@@ -1,0 +1,32 @@
+{
+    "details": {
+        "under_maintenance": {
+            "enabled": false,
+            "footer_message": "Oops! We’re doing some upgrades.",
+            "maintenance_image": "https://cdn-media.tickets2mecdn.org/media/footer/image/Screenshot 2025-11-19 110805.png_20251119111122867100",
+            "reason_for_maintenance": "Our app is under maintenance as we upgrade system performance and security. We’ll be back shortly with a smoother experience.",
+            "playstore_url": "ASDAD",
+            "appstore_url": "ASDASD",
+            "isComingSoonFlag": false,
+            "isComingSoonMessage": "We’re almost ready. Coming soon!",
+            "isComingSoonImage": "https://cdn-media.tickets2mecdn.org/media/footer/image/Screenshot 2025-11-19 105706.png_20251119111229699938",
+            "banner": [
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/WhatsApp Image 2025-10-23 at 16.32.56.jpeg_20251111174104413984",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/mentor_meter_logo (1).png_20251111174110380283",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/RUPAY.png_20251112203633552366",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/VISA.jpg_20251112203633556527",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/MASTER.png_20251112203633547847",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/TICKETS2ME.png_20251112203633555432",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-annamw-1047442.jpg_20251115093843777702",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-arif-yilmaz-2157350916-34680823.jpg_20251119111320935666",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-alan-videomaker-fotografo-426003225-17486300.jpg_20251119111337865804",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-robert-viguro-251120312-12506617.jpg_20251119111351573310",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-skyler-ewing-266953-4600407.jpg_20251119111401476908",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-alexandre-saraiva-carniato-583650-5970279.jpg_20251119111425120887",
+                "https://cdn-media.tickets2mecdn.org/media/footer/image/pexels-a-darmel-8158286.jpg_20251119111440046096"
+            ],
+            "home_title": "HOME TITLE",
+            "home_subtitle": "HOME SUB TITLE"
+        }
+    }
+}

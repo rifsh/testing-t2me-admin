@@ -1,0 +1,36 @@
+{
+    "fetched_payload": {
+        "items": [
+            {
+                "status": true,
+                "created_at": "2025-11-25T12:16:58.922534+05:30",
+                "updated_at": "2025-11-25T12:16:58.922537+05:30",
+                "name": "Education",
+                "description": "EducationEducation EducationEducationEducationEducation EducationEducation Education EducationEducation",
+                "thumbnail_image": "media/category/image/pexels-john-benedict-malong-1336137930-25358075 (1).jpg_20251125121657016161",
+                "id": 14
+            }
+        ],
+        "total": 14,
+        "page": 1,
+        "size": 10,
+        "pages": 2
+    },
+    "edit_payload": {
+        "id": 14,
+        "name": "Education",
+        "description": "EducationEducation EducationEducationEducationEducation EducationEducation Education EducationEducation",
+        "thumbnail_image": {
+            "file_name": "pexels-john-benedict-malong-1336137930-25358075 (1).jpg_20251125121657016161",
+            "media_type": "image"
+        }
+    },
+    "edit_response": {
+        "status": {
+            "message": "No active schedules are available. The changes do not have assigned schedules but could impact other elements in the forms, such as events, offers, and venues that can be scheduled for the future. Please review these areas carefully to ensure the changes do not unintentionally affect the form's structure or functionality.",
+            "status_code": "00000",
+            "editable_status": true,
+            "data": {}
+        }
+    }
+}

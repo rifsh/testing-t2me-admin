@@ -6,7 +6,7 @@ import {
 import CategoryMockData from "mock/data/categoryData";
 import CategoryService from "services/CategoryService";
 
-const initialState = {
+export const initialState = {
   loading: false,
   categories: [],
   activeTab: "categories",
@@ -436,7 +436,7 @@ const categorySlice = createSlice({
       })
       .addCase(updateCategory.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
+        if (payload?.message) {
           state.message = payload.message;
           state.editable_status = payload.editable_status;
         }

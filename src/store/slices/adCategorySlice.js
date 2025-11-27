@@ -92,14 +92,9 @@ export const fetchAdCategories = createAsyncThunk(
   "adCategory/fetchAdCategories",
   async (pageData, { rejectWithValue }) => {
     try {
-      if (ADVERTISEMENT_ALL_CATEGORY_MOCK_API) {
-        const response = AdCategoryMockData.fetchAllCategory;
-        return response.data;
-      } else {
-        const response = await AdCategoryService.fetchAdCategory(pageData);
-        console.log("-----------Fetching categories", response.data[0]);
-        return response.data[0];
-      }
+      const response = await AdCategoryService.fetchAdCategory(pageData);
+      console.log("-----------Fetching categories", response.data[0]);
+      return response.data[0];
     } catch (error) {
       console.log(error, "-------------");
       return rejectWithValue("Failed to fetch categories");
@@ -134,10 +129,15 @@ const AdcategorySlice = createSlice({
     },
 
     setSearchTerm: (state, action) => {
-      state.searchTerm = action.payload;
-      state.filteredAdCategories = state.adCategories.filter((cat) =>
-        cat.name.toLowerCase().includes(action.payload.toLowerCase())
-      );
+      const value = action.payload ?? "";
+      state.searchTerm = value;
+
+      state.filteredAdCategories =
+        value === ""
+          ? state.adCategories
+          : state.adCategories.filter(item =>
+            item.name.toLowerCase().includes(value.toLowerCase())
+          );
     },
     setAdCategoryValidationDialogVisible(state, action) {
       state.adCategoryValidationDialogVisible = action.payload;
@@ -244,6 +244,7 @@ export const {
   setAdCategoryDialogVisible,
   setAdCategoryModalLoading,
   setSelectedAdCategory,
+  setSearchTerm,
   setEditItemId,
   setAdCategoryValidationDialogVisible,
 } = AdcategorySlice.actions;

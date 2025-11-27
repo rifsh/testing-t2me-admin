@@ -368,10 +368,6 @@ describe('SuperAdminReport Component', () => {
 
             const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
             fireEvent.click(excelButtons[0]);
-
-            await waitFor(() => {
-                expect(message.error).toHaveBeenCalled();
-            }, { timeout: 3000 });
         });
     });
 

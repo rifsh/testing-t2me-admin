@@ -6,15 +6,35 @@ options:
 pipelines:
   default:
     - step:
-        name: Run Tests & Coverage
+        name: React Tests & Coverage
+        size: 2x
         caches:
           - node
         script:
-          # Make your script executable
-          - chmod +x test/scripts/run-tests.sh
+          - echo ":test_tube: Running React Tests & Coverage"
 
-          # Run your custom test script
-          - ./test/scripts/run-tests.sh
+          # Install lcov (optional but consistent with Flutter pipeline)
+          - apt-get update && apt-get install -y lcov
+
+          # Check Node & npm versions
+          - node -v || { echo ":x: Failed to get Node version"; exit 1; }
+          - npm -v || { echo ":x: Failed to get npm version"; exit 1; }
+
+          # Install dependencies
+          - echo ":package: Installing dependencies..."
+          - npm install || { echo ":x: npm install failed"; exit 1; }
+
+          # Set coverage threshold (default = 80%)
+          - export WEB_COVERAGE_THRESHOLD=${WEB_COVERAGE_THRESHOLD:-80}
+          - echo "Coverage threshold set to: $WEB_COVERAGE_THRESHOLD%"
+
+          # Ensure test script is executable
+          - chmod +x config/scripts/run-tests.sh
+
+          # Run your test script
+          - bash config/scripts/run-tests.sh || { echo ":x: Tests failed"; exit 1; }
+
+          - echo ":white_check_mark: All tests passed successfully"
 
         artifacts:
           - coverage/**
