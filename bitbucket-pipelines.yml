@@ -5,7 +5,7 @@ options:
 
 pipelines:
   branches:
-    developer:
+    feature/**:     
       - step:
           name: Build Tasks & Coverage
           size: 2x
@@ -13,26 +13,26 @@ pipelines:
             - node
           script:
             - echo "Task_Info- Keeping_Back-lash_k_Coverage"
-            
+
             # Check Node & npm versions
             - node -v || { echo "Failed to get Node version"; exit 1; }
             - npm -v || { echo "Failed to get npm version"; exit 1; }
-            
+
             # Install dependencies
-            - echo "Installing dependencies...."
+            - echo "Installing dependencies..."
             - npm install || { echo "npm install failed"; exit 1; }
-            
+
             # Set coverage threshold (default = 80%)
             - export WEB_COVERAGE_THRESHOLD=${WEB_COVERAGE_THRESHOLD:-80}
             - echo "Coverage threshold set to $WEB_COVERAGE_THRESHOLD%"
-            
+
             # Ensure test script is executable
             - chmod +x config/scripts/run-tests.sh
-            
+
             # Run your test script
             - bash config/scripts/run-tests.sh || { echo "Tests failed"; exit 1; }
-            
+
             - echo "All tests passed successfully"
-          
+
           artifacts:
             - coverage/**
