@@ -11,7 +11,7 @@ describe('StaticsService', () => {
     });
 
     describe('fetchAnnualStatsforEvents', () => {
-        it('should fetch annual stats for events with correct parameters', async () => {
+        it('should fetch annual stats for events with correct parameter', async () => {
             const mockResponse = { data: [{ statistics: [] }] };
             fetch.mockResolvedValue(mockResponse);
 
