@@ -12,7 +12,7 @@ import adCategoryReducer, {
     setEditItemId,
     setAdCategoryValidationDialogVisible,
     setSearchTerm
-} from '../../../src/store/slices/AdCategorySlice';
+} from '../../../src/store/slices/adCategorySlice';
 import { adCategoryMock } from '../../mock/slices/adCategory.mock';
 
 // Mock the services
