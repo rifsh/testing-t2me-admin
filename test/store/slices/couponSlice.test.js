@@ -132,7 +132,7 @@ describe("Coupon Slice Test Suite", () => {
         expect(state.selectedCouponsDays.length).toBe(2);
     });
 
-    it("should add coupon successfully", async () => {
+    it("should add coupons successfully", async () => {
         await store.dispatch(addCoupon({ data: {}, action: "create" }));
 
         const state = store.getState().coupon;
