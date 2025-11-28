@@ -1,0 +1,33 @@
+ls{
+  "fetchAdCategory": {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "name": "Category 1"
+      },
+      {
+        "id": 2,
+        "name": "Category 2"
+      }
+    ]
+  },
+  "updateAdCategory": {
+    "success": true,
+    "message": "Category updated successfully"
+  },
+  "updateAdStatus": {
+    "success": true,
+    "message": "Status updated successfully"
+  },
+  "addAdCategory": {
+    "success": true,
+    "message": "Category added successfully"
+  },
+  "validateAdCategory": {
+    "success": true,
+    "data": {
+      "isValid": true
+    }
+  }
+}

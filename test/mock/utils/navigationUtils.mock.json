@@ -1,0 +1,48 @@
+{
+  "NAVIGATION_BAR_FEATURE_FLAGS": {
+    "orders": {
+      "enabled": true
+    },
+    "services": {
+      "enabled": true,
+      "subitems": {
+        "general": {
+          "enabled": true
+        },
+        "event": {
+          "enabled": false
+        },
+        "movie": {
+          "enabled": true,
+          "items": {
+            "list": {
+              "enabled": true
+            },
+            "add": {
+              "enabled": false
+            }
+          }
+        }
+      }
+    },
+    "issues": {
+      "enabled": true,
+      "subitems": {
+        "issue_tracking": {
+          "enabled": true
+        },
+        "track_requests": {
+          "enabled": true,
+          "subitems": {
+            "general": {
+              "enabled": true
+            }
+          }
+        }
+      }
+    },
+    "disabled_category": {
+      "enabled": false
+    }
+  }
+}
