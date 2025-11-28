@@ -1,0 +1,132 @@
+{
+    "fetchAllCouponsResponse": {
+        "items": [
+            {
+                "status": false,
+                "created_at": "2025-11-12T13:17:22.972529+05:30",
+                "updated_at": "2025-11-28T11:35:45.484225+05:30",
+                "name": "*Valid coupon- new",
+                "start_date": "2025-11-20",
+                "end_date": "2025-11-21",
+                "max_uses": 300,
+                "is_general": true,
+                "key_words": [
+                    "New439800"
+                ],
+                "min_purchase_amount": 4000,
+                "thumbnail_image": "media/coupon/image/f6b56f1d4f3e91c7101f39df22013f57.jpg_20251112131719861357",
+                "is_single": false,
+                "is_offline": false,
+                "is_reusable": true,
+                "discount_percentage_amount": 40,
+                "is_percentage": true,
+                "weekday_associations": [
+                    {
+                        "id": 9,
+                        "weekday": "MONDAY",
+                        "coupon_id": 12,
+                        "organizer_coupon_id": null
+                    },
+                    {
+                        "id": 10,
+                        "weekday": "TUESDAY",
+                        "coupon_id": 12,
+                        "organizer_coupon_id": null
+                    },
+                    {
+                        "id": 11,
+                        "weekday": "SATURDAY",
+                        "coupon_id": 12,
+                        "organizer_coupon_id": null
+                    }
+                ],
+                "id": 12,
+                "is_active": false,
+                "date_required": true,
+                "used_count": 0,
+                "current_date": "2025-11-28",
+                "created_by_user": null
+            },
+            {
+                "status": false,
+                "created_at": "2025-11-15T14:46:42.869657+05:30",
+                "updated_at": "2025-11-28T11:35:45.484225+05:30",
+                "name": "Sample Coupon test1",
+                "start_date": "2025-11-17",
+                "end_date": "2025-11-25",
+                "max_uses": 1,
+                "is_general": true,
+                "key_words": [
+                    "ASDASDEW"
+                ],
+                "min_purchase_amount": 2999,
+                "thumbnail_image": "images",
+                "is_single": true,
+                "is_offline": true,
+                "is_reusable": false,
+                "discount_percentage_amount": 100,
+                "is_percentage": true,
+                "weekday_associations": [],
+                "id": 31,
+                "is_active": false,
+                "date_required": true,
+                "used_count": 0,
+                "current_date": "2025-11-28",
+                "created_by_user": null
+            }
+        ],
+        "total": 60,
+        "page": 1,
+        "size": 10,
+        "pages": 6
+    },
+    "fetchCouponDetailsResponse": [
+        {
+            "id": 1,
+            "name": "Test Coupon",
+            "weekday_associations": [
+                "Mon",
+                "Tue"
+            ]
+        }
+    ],
+    "addCouponResponse": {
+        "data": {
+            "id": 10,
+            "name": "New Coupon"
+        },
+        "status": {
+            "message": "Created"
+        }
+    },
+    "editCouponResponse": {
+        "data": {
+            "list_of_updated_Schedules": {
+                "page": 2,
+                "size": 20
+            }
+        },
+        "status": {
+            "message": "Updated",
+            "editable_status": true,
+            "data": {
+                "active_schedules": {
+                    "page": 2,
+                    "size": 20
+                }
+            }
+        }
+    },
+    "generateCouponCodesResponse": {
+        "status": {
+            "status_code": 200,
+            "message": "Generated"
+        },
+        "data": {
+            "coupon_codes": [
+                "CODE123",
+                "CODE456"
+            ]
+        }
+    }
+}
