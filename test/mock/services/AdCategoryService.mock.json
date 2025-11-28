@@ -1,33 +1,28 @@
-ls{
-  "fetchAdCategory": {
-    "success": true,
-    "data": [
-      {
-        "id": 1,
-        "name": "Category 1"
-      },
-      {
-        "id": 2,
-        "name": "Category 2"
-      }
-    ]
-  },
-  "updateAdCategory": {
-    "success": true,
-    "message": "Category updated successfully"
-  },
-  "updateAdStatus": {
-    "success": true,
-    "message": "Status updated successfully"
-  },
-  "addAdCategory": {
-    "success": true,
-    "message": "Category added successfully"
-  },
-  "validateAdCategory": {
-    "success": true,
-    "data": {
-      "isValid": true
+
+{
+    "fetchAdCategory": {
+      "pageData": { "page": 1, "size": 10 },
+      "response": { "data": [{ "id": 1, "name": "Category 1" }] }
+    },
+    "updateAdCategory": {
+      "data": { "id": 1, "name": "Updated Category" },
+      "action": "update",
+      "pageData": { "page": 1, "size": 10 },
+      "response": { "data": { "id": 1, "name": "Updated Category" } }
+    },
+    "updateAdStatus": {
+      "data": { "id": 1, "status": "inactive" },
+      "action": "deactivate",
+      "pageData": { "page": 1, "size": 10 },
+      "response": { "data": { "id": 1, "status": "inactive" } }
+    },
+    "addAdCategory": {
+      "data": { "name": "New Category", "thumbnail_image": "image.png" },
+      "action": "add",
+      "response": { "data": { "id": 2, "name": "New Category" } }
+    },
+    "validateAdCategory": {
+      "adCategoryId": 1,
+      "response": { "data": { "isValid": true } }
     }
   }
-}
