@@ -1,48 +1,44 @@
 {
-  "NAVIGATION_BAR_FEATURE_FLAGS": {
-    "orders": {
-      "enabled": true
+    "isCategoryEnabled": {
+      "enabled": "orders",
+      "disabled": "disabledCategory"
     },
-    "services": {
-      "enabled": true,
-      "subitems": {
-        "general": {
-          "enabled": true
-        },
-        "event": {
-          "enabled": false
-        },
-        "movie": {
-          "enabled": true,
-          "items": {
-            "list": {
-              "enabled": true
-            },
-            "add": {
-              "enabled": false
-            }
-          }
-        }
+    "isSubcategoryEnabled": {
+      "category": "services",
+      "enabledSubcategory": "general",
+      "disabledSubcategory": "disabledSubcategory",
+      "nested": {
+        "category": "issues",
+        "enabledSubcategory": "track_requests.general",
+        "disabledSubcategory": "track_requests.disabled"
       }
     },
-    "issues": {
-      "enabled": true,
-      "subitems": {
-        "issue_tracking": {
-          "enabled": true
-        },
-        "track_requests": {
-          "enabled": true,
-          "subitems": {
-            "general": {
-              "enabled": true
-            }
-          }
-        }
+    "isItemEnabled": {
+      "category": "services",
+      "subcategory": "general",
+      "enabledItem": "item1",
+      "disabledItem": "item2",
+      "nested": {
+        "category": "issues",
+        "subcategory": "track_requests.general",
+        "enabledItem": "nestedItem1",
+        "disabledItem": "nestedItem2"
       }
     },
-    "disabled_category": {
-      "enabled": false
+    "isFeatureEnabled": {
+      "enabledFeature": "is_reports_enabled",
+      "disabledFeature": "is_disabled_feature",
+      "undefinedFeature": null
+    },
+    "getEnabledFeaturesInCategory": {
+      "categoryWithFeatures": "services",
+      "categoryWithoutFeatures": "orders",
+      "disabledCategory": "disabledCategory"
+    },
+    "hasEnabledFeaturesInCategory": {
+      "categoryWithFeatures": "services",
+      "categoryWithoutFeatures": "orders",
+      "disabledCategory": "disabledCategory"
     }
   }
-}
+  

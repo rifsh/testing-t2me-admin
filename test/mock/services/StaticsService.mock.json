@@ -1,0 +1,12 @@
+{
+    "fetchAnnualStatsforEvents": {
+      "response": { "data": [{ "id": 1, "name": "Event 1" }] }
+    },
+    "fetchAnnualStatsforUsers": {
+      "pageData": { "page": 1, "size": 10 },
+      "response": { "data": [{ "id": 1, "name": "User 1" }] }
+    },
+    "fetchAnnualStatsforSchedules": {
+      "response": { "data": [{ "id": 1, "name": "Schedule 1" }] }
+    }
+  }

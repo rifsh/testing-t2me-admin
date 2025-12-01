@@ -1,80 +1,144 @@
-
 {
-  "userDetails": {
-    "user": {
-      "id": 1,
-      "username": "testuser",
-      "email": "testuser@example.com",
-      "phone_number": "1234567890",
-      "role": {
-        "name": "admin",
-        "position_id": 1
+    "userDetails": {
+      "input": {
+        "user": {
+          "id": 1,
+          "username": "testuser",
+          "email": "test@example.com",
+          "phone_number": "1234567890",
+          "role": {
+            "name": "admin",
+            "position_id": 1
+          },
+          "country_name": "USA",
+          "thumbnail_image": "avatar.jpg",
+          "is_active": true,
+          "created_at": "2023-01-01T00:00:00.000Z",
+          "updated_at": "2023-01-01T00:00:00.000Z",
+          "access_matrix": ["read", "write"]
+        },
+        "events": ["event1"],
+        "theatres": ["theatre1"]
       },
-      "country_name": "USA",
-      "thumbnail_image": "avatar.jpg",
-      "is_active": true,
-      "created_at": "2023-01-01T12:00:00Z",
-      "updated_at": "2023-01-01T12:00:00Z",
-      "access_matrix": ["read", "write"]
-    },
-    "events": ["event1", "event2"],
-    "theatres": ["theater1", "theater2"]
-  },
-  "theaterListItem": {
-    "id": 1,
-    "name": "Test Theater",
-    "venue": {
-      "name": "Main Venue"
-    },
-    "place": {
-      "name": "Test City",
-      "country": {
-        "name": "Test Country"
-      },
-      "created_at": "2023-01-01T12:00:00Z",
-      "updated_at": "2023-01-01T12:00:00Z"
-    },
-    "phone_number": "9876543210",
-    "company": {
-      "email": "theater@example.com"
-    },
-    "status": "active"
-  },
-  "eventItem": {
-    "id": 1,
-    "event_name": "Test Event",
-    "description": "This is a test event.",
-    "thumbnail_image": "event.jpg",
-    "status": "active",
-    "created_at": "2023-01-01T12:00:00Z",
-    "updated_at": "2023-01-01T12:00:00Z",
-    "category": {
-      "id": 1,
-      "name": "Test Category"
-    },
-    "sub_category": {
-      "id": 1,
-      "name": "Test Sub-category"
-    },
-    "event_type": {
-      "id": 1,
-      "name": "Test Event Type",
-      "display_name": "Test Event Type",
-      "redirect_url": "/test-event",
-      "event_code": "TEST",
-      "status": "active",
-      "description": "This is a test event type."
-    },
-    "venues": [
-      {
+      "output": {
         "id": 1,
-        "name": "Test Venue",
-        "description": "This is a test venue.",
-        "place": {
-          "name": "Test Place"
-        }
+        "username": "testuser",
+        "email": "test@example.com",
+        "phone": "1234567890",
+        "role": "admin",
+        "position_id": 1,
+        "country": "USA",
+        "avatar": "avatar.jpg",
+        "status": true,
+        "created_at": "2023-01-01T00:00:00.000Z",
+        "updated_at": "2023-01-01T00:00:00.000Z",
+        "access_matrix": ["read", "write"],
+        "events": ["event1"],
+        "theatres": ["theatre1"]
       }
-    ],
-    "updates": ["update1", "update2"]
+    },
+    "theaterListItem": {
+      "input": {
+        "id": 1,
+        "name": "Test Theater",
+        "venue": {
+          "name": "Main Venue"
+        },
+        "place": {
+          "name": "New York",
+          "country": {
+            "name": "USA"
+          },
+          "created_at": "2023-01-01T00:00:00.000Z",
+          "updated_at": "2023-01-01T00:00:00.000Z"
+        },
+        "phone_number": "9876543210",
+        "company": {
+          "email": "company@example.com"
+        },
+        "status": "active"
+      },
+      "output": {
+        "id": 1,
+        "name": "Test Theater",
+        "address": "Main Venue",
+        "city": "New York",
+        "country": "USA",
+        "phone": "9876543210",
+        "email": "company@example.com",
+        "status": "active",
+        "created_at": "2023-01-01T00:00:00.000Z",
+        "updated_at": "2023-01-01T00:00:00.000Z"
+      }
+    },
+    "eventItem": {
+      "input": {
+        "id": 1,
+        "event_name": "Test Event",
+        "description": "A great event",
+        "thumbnail_image": "event.jpg",
+        "status": "published",
+        "created_at": "2023-01-01T00:00:00.000Z",
+        "updated_at": "2023-01-01T00:00:00.000Z",
+        "category": {
+          "id": 1,
+          "name": "Music"
+        },
+        "sub_category": {
+          "id": 2,
+          "name": "Rock"
+        },
+        "event_type": {
+          "id": 3,
+          "name": "concert",
+          "display_name": "Concert",
+          "redirect_url": "/concerts",
+          "event_code": "C123",
+          "status": "active",
+          "description": "Live music concert"
+        },
+        "venues": [
+          {
+            "id": 1,
+            "name": "Venue 1",
+            "description": "A cool venue",
+            "place": {
+              "name": "Downtown"
+            }
+          }
+        ],
+        "updates": ["update1"]
+      },
+      "output": {
+        "id": 1,
+        "value": 1,
+        "name": "Test Event",
+        "description": "A great event",
+        "thumbnail": "event.jpg",
+        "status": "published",
+        "created_at": "2023-01-01T00:00:00.000Z",
+        "updated_at": "2023-01-01T00:00:00.000Z",
+        "category_id": 1,
+        "category_name": "Music",
+        "sub_category_id": 2,
+        "sub_category_name": "Rock",
+        "event_type_id": 3,
+        "event_type_name": "concert",
+        "event_type_display_name": "Concert",
+        "event_type_redirect_url": "/concerts",
+        "event_type_code": "C123",
+        "event_type_status": "active",
+        "event_type_description": "Live music concert",
+        "venues": [
+          {
+            "id": 1,
+            "name": "Venue 1",
+            "description": "A cool venue",
+            "place_name": "Downtown"
+          }
+        ],
+        "updates": ["update1"]
+      }
+    }
   }
-}
+  

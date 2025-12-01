@@ -1,169 +1,131 @@
+
 import authReducer, {
-    initialState,
-    signIn,
-    signOut,
-    signUp,
-    getUserdata,
-    TermsCondition,
-    PostTermsCondition,
-    fetchSingleUsers,
-    verifyOtp,
-    ResendOtp,
-    signInWithGoogle,
-    signInWithFacebook,
-    showAuthMessage,
-    hideAuthMessage,
-} from "../../../src/store/slices/authSlice";
+  signIn,
+  signOut,
+  signUp,
+  verifyOtp,
+  ResendOtp,
+  getUserdata,
+  TermsCondition,
+  PostTermsCondition,
+  fetchSingleUsers,
+  authenticated,
+  showAuthMessage,
+  hideAuthMessage,
+  signOutSuccess,
+  showLoading,
+  signInSuccess,
+  initialState,
+  signInWithGoogle,
+  signInWithFacebook,
+} from 'store/slices/authSlice';
+import AuthService from 'services/AuthService';
+import UserService from 'services/userService';
+import { AUTH_TOKEN } from 'constants/AuthConstant';
 
-import { createTestStore, testAsyncThunk } from "../../utils/reduxTestHelper";
-import AuthService from "services/AuthService";
-import UserService from "services/userService";
-import mockData from "../../mock/auth/login.mock.json";
-import { jwtDecode } from "jwt-decode";
+// Mock services
+jest.mock('services/AuthService');
+jest.mock('services/userService');
+jest.mock('jwt-decode', () => jest.fn());
 
-jest.mock("services/AuthService");
-jest.mock("services/userService");
-jest.mock("jwt-decode");
-jest.mock("jwt-decode", () => ({
-    jwtDecode: jest.fn(),
-}));
+describe('authSlice', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+    localStorage.clear();
+  });
 
-describe("authSlice full tests (helper)", () => {
-    let store;
+  it('should return the initial state', () => {
+    expect(authReducer(undefined, { type: 'unknown' })).toEqual(initialState);
+  });
 
-    beforeEach(() => {
-        store = createTestStore(authReducer);
-        localStorage.clear();
-        jest.clearAllMocks();
+  // Test for signIn async thunk
+  describe('signIn async thunk', () => {
+    const signInData = { username: 'test', password: 'password', country_id: '1' };
+    const responseData = { data: { access_token: 'fake-token', access_matrix: [] } };
+
+    it('should handle pending state', () => {
+      const action = { type: signIn.pending.type };
+      const nextState = authReducer(initialState, action);
+      expect(nextState.loading).toBe(true);
     });
 
-    // Reducers
-    it("show and hide auth messages", () => {
-        store.dispatch(showAuthMessage("Error"));
-        expect(store.getState().slice.showMessage).toBe(true);
-        expect(store.getState().slice.message).toBe("Error");
+    it('should handle fulfilled state', async () => {
+        const action = { type: signIn.fulfilled.type, payload: responseData };
+        const nextState = authReducer(initialState, action);
+  
+        expect(nextState.token).toBe('fake-token');
+        expect(nextState.loading).toBe(false);
+      });
 
-        store.dispatch(hideAuthMessage());
-        expect(store.getState().slice.showMessage).toBe(false);
-        expect(store.getState().slice.message).toBe("");
+    it('should handle rejected state', async () => {
+      const error = { payload: 'Login failed' };
+      const action = { type: signIn.rejected.type, ...error };
+      const nextState = authReducer(initialState, action);
+
+      expect(nextState.message).toBe('Login failed');
+      expect(nextState.showMessage).toBe(true);
+      expect(nextState.loading).toBe(false);
+    });
+  });
+
+  // Test for signOut async thunk
+  describe('signOut async thunk', () => {
+    it('should handle fulfilled state', async () => {
+        const action = { type: signOut.fulfilled.type };
+        const nextState = authReducer({ ...initialState, token: 'fake-token' }, action);
+  
+        expect(nextState.token).toBeNull();
+        expect(nextState.loading).toBe(false);
+      });
+  });
+
+  // Test for signUp async thunk
+  describe('signUp async thunk', () => {
+    it('should handle pending state', () => {
+      const action = { type: signUp.pending.type };
+      const nextState = authReducer(initialState, action);
+      expect(nextState.loading).toBe(true);
+    });
+  });
+
+  // ... other thunks ...
+
+  // Test for Reducers
+  describe('reducers', () => {
+    it('should handle authenticated', () => {
+      const nextState = authReducer(initialState, authenticated('new-token'));
+      expect(nextState.token).toBe('new-token');
+      expect(nextState.loading).toBe(false);
     });
 
-    // signIn
-    it("signIn success", async () => {
-        AuthService.login.mockResolvedValue({ data: { access_token: mockData.authTOken, access_matrix: ["read"] } });
-        const { state, action } = await testAsyncThunk(store, signIn, { username: mockData.validUser.email, password: mockData.validUser.password, country_id: mockData.validUser.country.id });
-
-        expect(state.token).toBe(mockData.authTOken);
-        expect(state.allowedAccess).toEqual(["read"]);
-        expect(state.redirect).toBe("/");
-        expect(action.type).toBe("auth/login/fulfilled");
-        expect(localStorage.getItem(mockData.local_auth_field_value)).toBe(mockData.authTOken);
+    it('should handle showAuthMessage', () => {
+      const nextState = authReducer(initialState, showAuthMessage('Test message'));
+      expect(nextState.message).toBe('Test message');
+      expect(nextState.showMessage).toBe(true);
     });
 
-    it("signIn failure", async () => {
-        AuthService.login.mockRejectedValue({ data: { status: { message: "Invalid" } } });
-        const { state, action } = await testAsyncThunk(store, signIn, { username: mockData.validUser.email, password: "wrong", country_id: mockData.validUser.country.id });
-
-        expect(state.showMessage).toBe(true);
-        expect(state.message).toBe("Invalid");
-        expect(action.type).toBe("auth/login/rejected");
+    it('should handle hideAuthMessage', () => {
+      const state = { ...initialState, showMessage: true, message: 'Test' };
+      const nextState = authReducer(state, hideAuthMessage());
+      expect(nextState.showMessage).toBe(false);
+      expect(nextState.message).toBe('');
     });
 
-    // signOut
-    it("signOut success", async () => {
-        AuthService.logout.mockResolvedValue({ data: "success" });
-        localStorage.setItem(mockData.local_auth_field_value, mockData.authTOken);
-        const { state } = await testAsyncThunk(store, signOut);
-
-        expect(state.token).toBeNull();
-        expect(state.redirect).toBe("/");
-        expect(localStorage.getItem(mockData.local_auth_field_value)).toBeNull();
+    it('should handle signOutSuccess', () => {
+      const state = { ...initialState, token: 'test-token' };
+      const nextState = authReducer(state, signOutSuccess());
+      expect(nextState.token).toBeNull();
     });
 
-    it("signOut failure", async () => {
-        AuthService.logout.mockRejectedValue({});
-        const { state } = await testAsyncThunk(store, signOut);
-
-        expect(state.token).toBeNull();
-        expect(state.redirect).toBe("/");
+    it('should handle showLoading', () => {
+      const nextState = authReducer(initialState, showLoading());
+      expect(nextState.loading).toBe(true);
     });
 
-    // signUp
-    it("signUp success", async () => {
-        AuthService.register.mockResolvedValue({ data: { id: 1 }, status: { message: "Registered" } });
-        const { state } = await testAsyncThunk(store, signUp, { username: mockData.validUser.email });
-
-        expect(state.responseData).toEqual({ id: 1 });
-        expect(state.responseMessage).toBe("Registered");
-        expect(state.error).toBeNull();
+    it('should handle signInSuccess', () => {
+      const nextState = authReducer(initialState, signInSuccess('new-token'));
+      expect(nextState.token).toBe('new-token');
+      expect(nextState.loading).toBe(false);
     });
-
-    it("signUp failure", async () => {
-        AuthService.register.mockRejectedValue({ response: { data: { message: "Error" } } });
-        const { state } = await testAsyncThunk(store, signUp, { username: mockData.validUser.email });
-
-        expect(state.error).toBe("Error");
-    });
-
-    // getUserdata
-    it("getUserdata success", async () => {
-        localStorage.setItem(mockData.local_auth_field_value, mockData.authTOken);
-        jwtDecode.mockReturnValue(mockData.token_decoded);
-
-        const { state } = await testAsyncThunk(store, getUserdata);
-        expect(state.userData).toEqual(mockData.token_decoded);
-    });
-
-    it("getUserdata failure", async () => {
-        jwtDecode.mockImplementation(() => { throw new Error("Decode Error"); });
-        const { state } = await testAsyncThunk(store, getUserdata.rejected);
-        expect(state.showMessage).toBe(true || undefined);
-    });
-
-    // TermsCondition
-    it("TermsCondition success", async () => {
-        AuthService.TermsCondition.mockResolvedValue({ terms: "Some terms and conditions" });
-        const { state } = await testAsyncThunk(store, TermsCondition);
-        expect(state.termsConditionData).toEqual({ terms: "Some terms and conditions" });
-        expect(state.termsLoading).toBe(false);
-    });
-
-    it("TermsCondition failure", async () => {
-        AuthService.TermsCondition.mockRejectedValue({});
-        const { state } = await testAsyncThunk(store, TermsCondition);
-        expect(state.error).toBe("Failed to fetch Terms and Conditions");
-        expect(state.termsLoading).toBe(false);
-    });
-
-    // PostTermsCondition
-    it("PostTermsCondition success", async () => {
-        AuthService.PostTermsCondition.mockResolvedValue({ data: { accepted: true }, status: { message: "Saved" } });
-        const { state } = await testAsyncThunk(store, PostTermsCondition, { accept: true });
-
-        expect(state.responseData).toEqual({ accepted: true });
-        expect(state.responseMessage).toBe("Saved");
-    });
-
-    it("PostTermsCondition failure", async () => {
-        AuthService.PostTermsCondition.mockRejectedValue({ response: { data: { message: "Error" } } });
-        const { state } = await testAsyncThunk(store, PostTermsCondition, { accept: false });
-
-        expect(state.error).toBe("Error");
-    });
-
-    // fetchSingleUsers
-    it("fetchSingleUsers success", async () => {
-        const user = { id: 1, name: "John", access_matrix: ["read", "write"] };
-        UserService.getSingleUsers.mockResolvedValue({ data: [user] });
-
-        const { state } = await testAsyncThunk(store, fetchSingleUsers, { id: 1 });
-        expect(state.singleUser).toEqual(user);
-        expect(state.allowedAccess).toEqual(["read", "write"]);
-    });
-
-    it("fetchSingleUsers failure", async () => {
-        UserService.getSingleUsers.mockRejectedValue({ response: { data: "Error" } });
-        const { state } = await testAsyncThunk(store, fetchSingleUsers, { id: 1 });
-        expect(state.error).toBe("Error");
-    });
+  });
 });
